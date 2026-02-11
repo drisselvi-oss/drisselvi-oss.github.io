@@ -1,19 +1,3 @@
-{
-  "background_color": "#ffffff",
-  "description": "Budget annuel",
-  "dir": "ltr",
-  "display": "fullscreen",
-  "name": "budgetannuel",
-  "orientation": "any",
-  "scope": "/",
-  "short_name": "drisselvi-oss",
-  "start_url": "/https://drisselvi-oss.github.io/",
-  "theme_color": "#ffffff",
-  "lang": "fr",
-  "categories": [
-    "finance"
-  ]
-}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
