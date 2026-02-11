@@ -1,6 +1,36 @@
+/manifest.json
+{
+  "name": "Mon Budget Annuel",
+  "short_name": "Budget",
+  "description": "Suivi de budget perso",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0a84ff",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+/sw.js
+self.addEventListener("fetch", () => {});
+/icons/
+icon-192.png
+icon-512.png
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a84ff">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mon Budget Annuel</title>
@@ -63,6 +93,11 @@
     --input-bg: #24242C;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
+  <script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js");
+}
+</script>
   body {
     font-family: 'Nunito', sans-serif;
     background: var(--bg-primary);
