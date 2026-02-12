@@ -1,13 +1,21 @@
 {
-  "name": "Mon Budget Annuel",
-  "short_name": "Budget",
-  "description": "Application de suivi de budget personnel",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Budget annuel",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Budget",
+  "start_url": "/https://drisselvi-oss.github.io/",
   "theme_color": "#0a84ff",
+  "categories": [
+    "finance"
+  ],
+  "lang": "fr",
+  "share_target": {
+    "method": "GET"
+  }
+}
   "icons": [
     {
       "src": "icons/icon-192.png",
