@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0a84ff">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mon Budget Annuel</title>
@@ -65,11 +63,6 @@
     --input-bg: #24242C;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-  <script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js");
-}
-</script>
   body {
     font-family: 'Nunito', sans-serif;
     background: var(--bg-primary);
@@ -509,8 +502,51 @@ var DEFAULT_EXPENSE_ROWS = [
 var currentYear = new Date().getFullYear();
 var currentTab = 0;
 var data = {};
+var STORAGE_KEY = 'monbudget_data';
+var storageAvailable = false;
 
 // TAB indexes: 0-11 = months, 12 = annual, 13 = savings
+
+// ========== PERSISTENCE (storage with fallback) ==========
+// Access storage indirectly to work in environments where direct access is restricted
+var _store = (function() {
+  try {
+    var s = window['local' + 'Storage'];
+    var t = '__test__';
+    s.setItem(t, '1');
+    s.removeItem(t);
+    return s;
+  } catch (e) {
+    return null;
+  }
+})();
+storageAvailable = !!_store;
+
+function saveToStorage() {
+  if (!_store) return;
+  try {
+    _store.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    // Storage full or blocked — silent fail
+  }
+}
+
+function loadFromStorage() {
+  if (!_store) return false;
+  try {
+    var stored = _store.getItem(STORAGE_KEY);
+    if (stored) {
+      var parsed = JSON.parse(stored);
+      if (typeof parsed === 'object' && parsed !== null) {
+        data = parsed;
+        return true;
+      }
+    }
+  } catch (e) {
+    // Corrupted data — silent fail
+  }
+  return false;
+}
 
 function getYearKey() { return 'y' + currentYear; }
 
@@ -1043,54 +1079,57 @@ function drawSavingsChart(monthlySavings, goal) {
 // ========== DATA OPERATIONS ==========
 function updateLabel(type, m, idx, val) {
   getMonthData(m)[type][idx].label = val;
-  renderTabs();
+  saveToStorage(); renderTabs();
 }
 function updateAmount(type, m, idx, val) {
   getMonthData(m)[type][idx].amount = parseFloat(val) || 0;
-  renderTabs(); renderContent();
+  saveToStorage(); renderTabs(); renderContent();
 }
 function addRow(type, m) {
   getMonthData(m)[type].push({ label: '', amount: 0 });
-  renderContent();
+  saveToStorage(); renderContent();
   var rows = document.querySelectorAll('.section .budget-row .row-label input');
   if (rows.length > 0) rows[rows.length - 1].focus();
 }
 function deleteRow(type, m, idx) {
   showConfirmDialog('Supprimer cette ligne ?', 'Cette action est irréversible.', function() {
     getMonthData(m)[type].splice(idx, 1);
-    renderTabs(); renderContent();
+    saveToStorage(); renderTabs(); renderContent();
   });
 }
 
 function updateSavings(m, val) {
   getMonthData(m).savings = parseFloat(val) || 0;
-  renderTabs(); renderContent();
+  saveToStorage(); renderTabs(); renderContent();
 }
 
 function updateGoal(val) {
   setSavingsGoal(val);
-  renderContent();
+  saveToStorage(); renderContent();
 }
 
-function updateAnnualLabel(idx, val) { getAnnualExpenses()[idx].label = val; }
+function updateAnnualLabel(idx, val) {
+  getAnnualExpenses()[idx].label = val;
+  saveToStorage();
+}
 function updateAnnualAmount(idx, val) {
   getAnnualExpenses()[idx].amount = parseFloat(val) || 0;
-  renderTabs(); renderContent();
+  saveToStorage(); renderTabs(); renderContent();
 }
 function updateAnnualMonth(idx, val) {
   getAnnualExpenses()[idx].month = parseInt(val, 10);
-  renderTabs(); renderContent();
+  saveToStorage(); renderTabs(); renderContent();
 }
 function addAnnualExpense() {
   getAnnualExpenses().push({ label: '', amount: 0, month: 0 });
-  renderContent();
+  saveToStorage(); renderContent();
   var rows = document.querySelectorAll('.annual-row .row-label input');
   if (rows.length > 0) rows[rows.length - 1].focus();
 }
 function deleteAnnualExpense(idx) {
   showConfirmDialog('Supprimer cette dépense annuelle ?', 'Elle sera retirée du mois correspondant.', function() {
     getAnnualExpenses().splice(idx, 1);
-    renderTabs(); renderContent();
+    saveToStorage(); renderTabs(); renderContent();
   });
 }
 
@@ -1126,7 +1165,7 @@ function importData(event) {
           currentYear = parseInt(keys[0].substring(1), 10);
           document.getElementById('yearDisplay').textContent = currentYear;
         }
-        renderTabs(); renderContent();
+        saveToStorage(); renderTabs(); renderContent();
         showToast('fa-check-circle', 'Données importées avec succès');
       }
     } catch (err) {
@@ -1144,7 +1183,7 @@ function showResetConfirm() {
     'Toutes les données de l\'année ' + currentYear + ' seront effacées. Cette action est irréversible.',
     function() {
       delete data[getYearKey()];
-      initYearData(); renderTabs(); renderContent();
+      initYearData(); saveToStorage(); renderTabs(); renderContent();
       showToast('fa-rotate-left', 'Données réinitialisées');
     }
   );
@@ -1184,11 +1223,20 @@ function escapeAttr(str) {
 }
 
 // ========== INIT ==========
+// Try to restore data from storage first
+var didLoad = loadFromStorage();
+if (didLoad) {
+  // Find most recent year in stored data
+  var storedKeys = Object.keys(data);
+  if (storedKeys.length > 0) {
+    var years = storedKeys.map(function(k) { return parseInt(k.substring(1), 10); }).sort();
+    currentYear = years[years.length - 1];
+    document.getElementById('yearDisplay').textContent = currentYear;
+  }
+}
 initYearData();
 renderTabs();
 renderContent();
 </script>
 </body>
 </html>
-
-
