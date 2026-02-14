@@ -7,453 +7,218 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-  :root {
-    --bg-primary: #F4F1EC;
-    --bg-secondary: #FFFFFF;
-    --bg-card: #FFFFFF;
-    --text-primary: #2C2C2C;
-    --text-secondary: #6B6B6B;
-    --text-muted: #9E9E9E;
-    --accent: #C8956C;
-    --accent-light: #E8D5C4;
-    --accent-dark: #A07050;
-    --green: #5A9A6E;
-    --green-bg: #EAF4EC;
-    --red: #C75B5B;
-    --red-bg: #FAEAEA;
-    --blue: #5B7FC7;
-    --blue-bg: #EAF0FA;
-    --border: #E5E0D8;
-    --shadow: 0 2px 12px rgba(0,0,0,0.06);
-    --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
-    --radius: 14px;
-    --tab-active-bg: var(--accent);
-    --tab-active-text: #FFF;
-    --annual-badge: #8B6DC7;
-    --annual-badge-bg: #F0EAFA;
-    --savings: #2E8B8B;
-    --savings-bg: #E4F5F3;
-    --savings-light: #D0EDEB;
-    --input-bg: #FAF8F5;
-  }
-  html.dark {
-    --bg-primary: #1A1A1F;
-    --bg-secondary: #222228;
-    --bg-card: #2A2A32;
-    --text-primary: #E8E4DF;
-    --text-secondary: #A09A90;
-    --text-muted: #6E6A62;
-    --accent: #D4A06A;
-    --accent-light: #3D3228;
-    --accent-dark: #E8B880;
-    --green: #6EBD84;
-    --green-bg: #1E2E22;
-    --red: #E07070;
-    --red-bg: #2E1E1E;
-    --blue: #7094DD;
-    --blue-bg: #1E2436;
-    --border: #3A3A42;
-    --shadow: 0 2px 12px rgba(0,0,0,0.2);
-    --shadow-lg: 0 8px 30px rgba(0,0,0,0.3);
-    --annual-badge: #A88AE0;
-    --annual-badge-bg: #2A2440;
-    --savings: #4EC4C4;
-    --savings-bg: #1E2E2E;
-    --savings-light: #253838;
-    --input-bg: #24242C;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    font-family: 'Nunito', sans-serif;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-  .app-header {
-    background: var(--bg-secondary);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 20px 0;
-    position: sticky; top:0; z-index: 100;
-    box-shadow: var(--shadow);
-  }
-  .header-top {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 14px;
-  }
-  .logo { display: flex; align-items: center; gap: 10px; }
-  .logo-icon {
-    width: 38px; height: 38px; border-radius: 10px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-    display: flex; align-items: center; justify-content: center;
-    color: #FFF; font-size: 18px;
-  }
-  .logo h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 22px; font-weight: 400; color: var(--text-primary);
-  }
-  .header-actions { display: flex; gap: 8px; }
-  .btn-icon {
-    width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border);
-    background: var(--bg-card); color: var(--text-secondary);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; font-size: 14px; transition: all .2s;
-  }
-  .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
-  .tabs-container {
-    display: flex; gap: 4px; overflow-x: auto; padding-bottom: 0;
-    scrollbar-width: none; -ms-overflow-style: none;
-  }
-  .tabs-container::-webkit-scrollbar { display: none; }
-  .tab-btn {
-    padding: 8px 14px; border-radius: 10px 10px 0 0;
-    border: none; background: transparent;
-    font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700;
-    color: var(--text-muted); cursor: pointer; white-space: nowrap;
-    transition: all .25s; position: relative;
-  }
-  .tab-btn:hover { color: var(--text-secondary); background: var(--bg-primary); }
-  .tab-btn.active { background: var(--accent); color: #FFF; }
-  .tab-btn.annual-tab { color: var(--annual-badge); }
-  .tab-btn.annual-tab.active { background: var(--annual-badge); color: #FFF; }
-  .tab-btn.savings-tab { color: var(--savings); }
-  .tab-btn.savings-tab.active { background: var(--savings); color: #FFF; }
-  .tab-btn .tab-balance {
-    display: block; font-size: 10px; font-weight: 600; margin-top: 1px;
-  }
-  .tab-btn .tab-balance.positive { color: var(--green); }
-  .tab-btn .tab-balance.negative { color: var(--red); }
-  .tab-btn.active .tab-balance.positive,
-  .tab-btn.active .tab-balance.negative { color: rgba(255,255,255,0.85); }
-  .main-content {
-    max-width: 800px; margin: 0 auto;
-    padding: 20px 16px 100px;
-  }
-  .summary-row {
-    display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px;
-    margin-bottom: 20px;
-  }
-  .summary-row.three-cols { grid-template-columns: 1fr 1fr 1fr; }
-  .summary-card {
-    background: var(--bg-card); border-radius: var(--radius);
-    padding: 14px 16px; box-shadow: var(--shadow);
-    border: 1px solid var(--border);
-  }
-  .summary-card .label {
-    font-size: 11px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .8px; color: var(--text-muted); margin-bottom: 4px;
-  }
-  .summary-card .value {
-    font-family: 'DM Serif Display', serif;
-    font-size: 22px; color: var(--text-primary);
-  }
-  .summary-card.income .value { color: var(--green); }
-  .summary-card.expense .value { color: var(--red); }
-  .summary-card.balance .value.positive { color: var(--green); }
-  .summary-card.balance .value.negative { color: var(--red); }
-  .summary-card.savings-card .value { color: var(--savings); }
-  .section {
-    background: var(--bg-card); border-radius: var(--radius);
-    box-shadow: var(--shadow); border: 1px solid var(--border);
-    margin-bottom: 16px; overflow: hidden;
-  }
-  .section-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 18px; border-bottom: 1px solid var(--border);
-  }
-  .section-title {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 14px; font-weight: 800; color: var(--text-primary);
-  }
-  .section-title .icon {
-    width: 28px; height: 28px; border-radius: 8px;
-    display: flex; align-items: center; justify-content: center; font-size: 13px;
-  }
-  .section-title .icon.income-icon { background: var(--green-bg); color: var(--green); }
-  .section-title .icon.expense-icon { background: var(--red-bg); color: var(--red); }
-  .section-title .icon.annual-icon { background: var(--annual-badge-bg); color: var(--annual-badge); }
-  .section-title .icon.savings-icon { background: var(--savings-bg); color: var(--savings); }
-  .section-total { font-family: 'DM Serif Display', serif; font-size: 18px; }
-  .section-total.income-total { color: var(--green); }
-  .section-total.expense-total { color: var(--red); }
-  .section-total.annual-total { color: var(--annual-badge); }
-  .section-total.savings-total { color: var(--savings); }
-  .budget-row {
-    display: grid; grid-template-columns: 1fr 140px 40px;
-    align-items: center; padding: 10px 18px;
-    border-bottom: 1px solid var(--border); transition: background .15s;
-  }
-  .budget-row:last-child { border-bottom: none; }
-  .budget-row:hover { background: var(--input-bg); }
-  .budget-row.auto-row { background: var(--annual-badge-bg); cursor: default; }
-  .budget-row.auto-row:hover { background: var(--annual-badge-bg); }
-  .budget-row.provision-row { background: var(--blue-bg); cursor: default; }
-  .budget-row.provision-row:hover { background: var(--blue-bg); }
-  .budget-row.provision-row .auto-value { color: var(--blue); }
-  .provision-detail-label {
-    display: flex; flex-direction: column; gap: 1px;
-  }
-  .provision-detail-label .prov-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
-  .provision-detail-label .prov-meta { font-size: 11px; color: var(--text-muted); font-weight: 600; }
-  .provision-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    background: var(--blue-bg); color: var(--blue);
-    padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 800;
-    margin-left: 6px; letter-spacing: .5px;
-  }
-  .section-total.provision-total { color: var(--blue); }
-  .section-title .icon.provision-icon { background: var(--blue-bg); color: var(--blue); }
-  .row-label { font-size: 14px; font-weight: 600; color: var(--text-primary); }
-  .row-label input {
-    border: none; background: transparent; font-family: 'Nunito', sans-serif;
-    font-size: 14px; font-weight: 600; color: var(--text-primary);
-    width: 100%; outline: none;
-  }
-  .row-label input::placeholder { color: var(--text-muted); }
-  .row-label input:focus { border-bottom: 2px solid var(--accent); }
-  .row-amount input {
-    border: none; background: var(--input-bg); border-radius: 8px;
-    padding: 8px 12px; font-family: 'Nunito', sans-serif;
-    font-size: 16px; font-weight: 700; color: var(--text-primary);
-    width: 100%; text-align: right; outline: none; transition: all .2s;
-  }
-  .row-amount input:focus { background: var(--bg-secondary); box-shadow: 0 0 0 2px var(--accent); }
-  .row-amount .auto-value {
-    font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700;
-    color: var(--annual-badge); text-align: right; padding: 8px 12px;
-  }
-  .row-delete { display: flex; justify-content: center; }
-  .row-delete button {
-    width: 30px; height: 30px; border-radius: 8px;
-    border: none; background: transparent; color: var(--text-muted);
-    cursor: pointer; font-size: 13px; transition: all .2s;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .row-delete button:hover { background: var(--red-bg); color: var(--red); }
-  .add-row-btn {
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    width: 100%; padding: 12px; border: none;
-    background: transparent; font-family: 'Nunito', sans-serif;
-    font-size: 13px; font-weight: 700; color: var(--accent);
-    cursor: pointer; transition: all .2s;
-  }
-  .add-row-btn:hover { background: var(--accent-light); }
-  .annual-row {
-    display: grid; grid-template-columns: 1fr 140px 120px 40px;
-    align-items: center; padding: 10px 18px;
-    border-bottom: 1px solid var(--border); transition: background .15s;
-  }
-  .annual-row:last-child { border-bottom: none; }
-  .annual-row:hover { background: var(--input-bg); }
-  .month-select {
-    padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
-    background: var(--input-bg); font-family: 'Nunito', sans-serif;
-    font-size: 14px; font-weight: 600; color: var(--text-primary);
-    outline: none; cursor: pointer; width: 100%;
-  }
-  .month-select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-light); }
-  .annual-summary {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-    margin-bottom: 20px;
-  }
-  .annual-summary .summary-card .value { color: var(--annual-badge); }
-  .balance-bar { height: 6px; border-radius: 3px; background: var(--border); margin-top: 8px; overflow: hidden; }
-  .balance-bar-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
-  .balance-bar-fill.positive { background: var(--green); }
-  .balance-bar-fill.negative { background: var(--red); }
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 200; opacity: 0; pointer-events: none; transition: opacity .25s;
-  }
-  .modal-overlay.show { opacity: 1; pointer-events: all; }
-  .modal {
-    background: var(--bg-card); border-radius: var(--radius);
-    padding: 24px; max-width: 400px; width: 90%;
-    box-shadow: var(--shadow-lg);
-    transform: translateY(20px); transition: transform .25s;
-  }
-  .modal-overlay.show .modal { transform: translateY(0); }
-  .modal h3 { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 12px; }
-  .modal p { color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
-  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-  .modal-btn {
-    padding: 10px 20px; border-radius: 10px; border: none;
-    font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700;
-    cursor: pointer; transition: all .2s;
-  }
-  .modal-btn.cancel { background: var(--bg-primary); color: var(--text-secondary); }
-  .modal-btn.cancel:hover { background: var(--border); }
-  .modal-btn.confirm { background: var(--red); color: #FFF; }
-  .modal-btn.confirm:hover { opacity: .85; }
-  .toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-    background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);
-    padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 600;
-    box-shadow: var(--shadow-lg); z-index: 300; transition: transform .3s ease;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .toast.show { transform: translateX(-50%) translateY(0); }
-  .toast .toast-icon { font-size: 16px; }
-  .file-input-hidden { display: none; }
-  .auto-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    background: var(--annual-badge-bg); color: var(--annual-badge);
-    padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 800;
-    margin-left: 6px; letter-spacing: .5px;
-  }
-  .year-selector { display: flex; align-items: center; gap: 6px; }
-  .year-selector span {
-    font-family: 'DM Serif Display', serif;
-    font-size: 17px; min-width: 50px; text-align: center;
-  }
-  .year-btn {
-    width: 28px; height: 28px; border-radius: 8px;
-    border: 1px solid var(--border); background: var(--bg-card);
-    color: var(--text-secondary); cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; transition: all .2s;
-  }
-  .year-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .annual-month-dist { padding: 14px 18px; }
-  .dist-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .dist-label { font-size: 12px; font-weight: 700; color: var(--text-muted); width: 36px; }
-  .dist-bar { flex: 1; height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; }
-  .dist-bar-fill { height: 100%; border-radius: 4px; background: var(--annual-badge); transition: width .4s; }
-  .dist-bar-fill.savings-fill { background: var(--savings); }
-  .dist-amount { font-size: 12px; font-weight: 700; color: var(--text-secondary); width: 70px; text-align: right; }
-
-  /* === SAVINGS PAGE === */
-  .savings-summary {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-    margin-bottom: 20px;
-  }
-  .savings-summary .summary-card .value { color: var(--savings); }
-  .savings-table-header {
-    display: grid; grid-template-columns: 50px 1fr 100px 110px;
-    padding: 10px 18px; font-size: 11px; font-weight: 800;
-    text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted);
-    border-bottom: 2px solid var(--border);
-  }
-  .savings-table-row {
-    display: grid; grid-template-columns: 50px 1fr 100px 110px;
-    align-items: center; padding: 12px 18px;
-    border-bottom: 1px solid var(--border); transition: background .15s;
-  }
-  .savings-table-row:last-child { border-bottom: none; }
-  .savings-table-row:hover { background: var(--input-bg); }
-  .savings-table-row .month-label {
-    font-size: 13px; font-weight: 800; color: var(--text-muted);
-  }
-  .savings-table-row .month-name {
-    font-size: 14px; font-weight: 700; color: var(--text-primary);
-  }
-  .savings-table-row .sav-amount {
-    font-size: 16px; font-weight: 700; color: var(--savings); text-align: right;
-  }
-  .savings-table-row .sav-cumul {
-    font-family: 'DM Serif Display', serif;
-    font-size: 17px; color: var(--text-primary); text-align: right;
-  }
-  .savings-table-row.has-value .sav-cumul { color: var(--savings); }
-
-  /* Savings inline section in month page */
-  .savings-inline {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 18px;
-  }
-  .savings-inline-label {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 14px; font-weight: 700; color: var(--text-primary);
-  }
-  .savings-inline-input input {
-    border: none; background: var(--savings-bg); border-radius: 8px;
-    padding: 8px 14px; font-family: 'Nunito', sans-serif;
-    font-size: 16px; font-weight: 700; color: var(--savings);
-    width: 140px; text-align: right; outline: none; transition: all .2s;
-  }
-  .savings-inline-input input:focus {
-    background: var(--bg-secondary); box-shadow: 0 0 0 2px var(--savings);
-  }
-
-  /* Savings chart canvas */
-  .savings-chart-container {
-    padding: 18px; position: relative;
-  }
-  .savings-chart-canvas {
-    width: 100%; height: 200px; display: block;
-  }
-
-  /* Savings goal */
-  .savings-goal-section {
-    padding: 16px 18px; border-top: 1px solid var(--border);
-  }
-  .savings-goal-row {
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  }
-  .savings-goal-row label {
-    font-size: 13px; font-weight: 700; color: var(--text-secondary);
-  }
-  .savings-goal-row input {
-    border: 1px solid var(--border); background: var(--input-bg); border-radius: 8px;
-    padding: 8px 12px; font-family: 'Nunito', sans-serif;
-    font-size: 16px; font-weight: 700; color: var(--savings);
-    width: 140px; text-align: right; outline: none; transition: all .2s;
-  }
-  .savings-goal-row input:focus { border-color: var(--savings); box-shadow: 0 0 0 2px var(--savings-light); }
-  .savings-goal-bar {
-    width: 100%; height: 12px; border-radius: 6px; background: var(--border);
-    margin-top: 12px; overflow: hidden; position: relative;
-  }
-  .savings-goal-fill {
-    height: 100%; border-radius: 6px;
-    background: linear-gradient(90deg, var(--savings), var(--green));
-    transition: width .5s ease;
-  }
-  .savings-goal-pct {
-    margin-top: 6px; font-size: 13px; font-weight: 700; color: var(--savings);
-  }
-
-  .empty-state { text-align: center; padding: 32px 20px; color: var(--text-muted); }
-  .empty-state i { font-size: 28px; margin-bottom: 10px; display: block; color: var(--border); }
-  .empty-state p { font-size: 13px; }
-
-  @media (max-width: 600px) {
-    .summary-row { grid-template-columns: 1fr 1fr; }
-    .summary-row.three-cols { grid-template-columns: 1fr; }
-    .annual-summary { grid-template-columns: 1fr; }
-    .savings-summary { grid-template-columns: 1fr; }
-    .budget-row { grid-template-columns: 1fr 110px 36px; padding: 8px 12px; }
-    .annual-row { grid-template-columns: 1fr 100px 90px 36px; padding: 8px 12px; }
-    .savings-table-header { grid-template-columns: 40px 1fr 80px 90px; padding: 8px 12px; font-size: 10px; }
-    .savings-table-row { grid-template-columns: 40px 1fr 80px 90px; padding: 10px 12px; }
-    .savings-table-row .sav-amount { font-size: 14px; }
-    .savings-table-row .sav-cumul { font-size: 14px; }
-    .section-header { padding: 12px 14px; }
-    .summary-card .value { font-size: 18px; }
-    .tab-btn { padding: 7px 10px; font-size: 12px; }
-    .header-top { flex-wrap: wrap; gap: 8px; }
-    .savings-inline { flex-wrap: wrap; gap: 10px; }
-    .savings-inline-input input { width: 120px; }
-  }
-
-  @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
-  .section { animation: fadeIn .35s ease forwards; }
-  .section:nth-child(2) { animation-delay: .05s; }
-  .section:nth-child(3) { animation-delay: .1s; }
-  .section:nth-child(4) { animation-delay: .15s; }
-  .section:nth-child(5) { animation-delay: .2s; }
+:root {
+  --bg-primary:#F4F1EC;--bg-secondary:#FFF;--bg-card:#FFF;
+  --text-primary:#2C2C2C;--text-secondary:#6B6B6B;--text-muted:#9E9E9E;
+  --accent:#C8956C;--accent-light:#E8D5C4;--accent-dark:#A07050;
+  --green:#5A9A6E;--green-bg:#EAF4EC;
+  --red:#C75B5B;--red-bg:#FAEAEA;
+  --blue:#5B7FC7;--blue-bg:#EAF0FA;
+  --border:#E5E0D8;--shadow:0 2px 12px rgba(0,0,0,.06);--shadow-lg:0 8px 30px rgba(0,0,0,.08);
+  --radius:14px;
+  --annual-badge:#8B6DC7;--annual-badge-bg:#F0EAFA;
+  --savings:#2E8B8B;--savings-bg:#E4F5F3;--savings-light:#D0EDEB;
+  --input-bg:#FAF8F5;
+  --orange:#D48A3E;--orange-bg:#FDF3E6;
+}
+html.dark {
+  --bg-primary:#1A1A1F;--bg-secondary:#222228;--bg-card:#2A2A32;
+  --text-primary:#E8E4DF;--text-secondary:#A09A90;--text-muted:#6E6A62;
+  --accent:#D4A06A;--accent-light:#3D3228;--accent-dark:#E8B880;
+  --green:#6EBD84;--green-bg:#1E2E22;
+  --red:#E07070;--red-bg:#2E1E1E;
+  --blue:#7094DD;--blue-bg:#1E2436;
+  --border:#3A3A42;--shadow:0 2px 12px rgba(0,0,0,.2);--shadow-lg:0 8px 30px rgba(0,0,0,.3);
+  --annual-badge:#A88AE0;--annual-badge-bg:#2A2440;
+  --savings:#4EC4C4;--savings-bg:#1E2E2E;--savings-light:#253838;
+  --input-bg:#24242C;
+  --orange:#E8A54C;--orange-bg:#2E2618;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;overflow-x:hidden}
+.app-header{background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:16px 20px 0;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));display:flex;align-items:center;justify-content:center;color:#FFF;font-size:18px}
+.logo h1{font-family:'DM Serif Display',serif;font-size:22px;font-weight:400;color:var(--text-primary)}
+.header-actions{display:flex;gap:8px}
+.btn-icon{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .2s}
+.btn-icon:hover{border-color:var(--accent);color:var(--accent)}
+.tabs-container{display:flex;gap:4px;overflow-x:auto;padding-bottom:0;scrollbar-width:none;-ms-overflow-style:none}
+.tabs-container::-webkit-scrollbar{display:none}
+.tab-btn{padding:8px 14px;border-radius:10px 10px 0 0;border:none;background:transparent;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;white-space:nowrap;transition:all .25s}
+.tab-btn:hover{color:var(--text-secondary);background:var(--bg-primary)}
+.tab-btn.active{background:var(--accent);color:#FFF}
+.tab-btn.annual-tab{color:var(--annual-badge)}.tab-btn.annual-tab.active{background:var(--annual-badge);color:#FFF}
+.tab-btn.savings-tab{color:var(--savings)}.tab-btn.savings-tab.active{background:var(--savings);color:#FFF}
+.tab-btn .tab-balance{display:block;font-size:10px;font-weight:600;margin-top:1px}
+.tab-btn .tab-balance.positive{color:var(--green)}.tab-btn .tab-balance.negative{color:var(--red)}
+.tab-btn.active .tab-balance.positive,.tab-btn.active .tab-balance.negative{color:rgba(255,255,255,.85)}
+.main-content{max-width:820px;margin:0 auto;padding:20px 16px 100px}
+/* Summary */
+.summary-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.summary-card{background:var(--bg-card);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.summary-card .label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:4px}
+.summary-card .value{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text-primary)}
+.summary-card.income .value{color:var(--green)}
+.summary-card.expense .value{color:var(--red)}
+.summary-card.balance .value.positive{color:var(--green)}.summary-card.balance .value.negative{color:var(--red)}
+.summary-card.savings-card .value{color:var(--savings)}
+.balance-bar{height:6px;border-radius:3px;background:var(--border);margin-top:6px;overflow:hidden}
+.balance-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.balance-bar-fill.positive{background:var(--green)}.balance-bar-fill.negative{background:var(--red)}
+/* Sections */
+.section{background:var(--bg-card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:16px;overflow:hidden}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)}
+.section-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:var(--text-primary)}
+.section-title .icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.section-title .icon.income-icon{background:var(--green-bg);color:var(--green)}
+.section-title .icon.expense-icon{background:var(--red-bg);color:var(--red)}
+.section-title .icon.annual-icon{background:var(--annual-badge-bg);color:var(--annual-badge)}
+.section-title .icon.savings-icon{background:var(--savings-bg);color:var(--savings)}
+.section-title .icon.provision-icon{background:var(--blue-bg);color:var(--blue)}
+.section-title .icon.variable-icon{background:var(--orange-bg);color:var(--orange)}
+.section-total{font-family:'DM Serif Display',serif;font-size:18px}
+.section-total.income-total{color:var(--green)}.section-total.expense-total{color:var(--red)}
+.section-total.annual-total{color:var(--annual-badge)}.section-total.savings-total{color:var(--savings)}
+.section-total.provision-total{color:var(--blue)}.section-total.variable-total{color:var(--orange)}
+.auto-badge{display:inline-flex;align-items:center;gap:4px;background:var(--annual-badge-bg);color:var(--annual-badge);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;margin-left:6px;letter-spacing:.5px}
+.provision-badge{display:inline-flex;align-items:center;gap:4px;background:var(--blue-bg);color:var(--blue);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;margin-left:6px;letter-spacing:.5px}
+/* Rows */
+.budget-row{display:grid;grid-template-columns:28px 1fr 130px 32px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);transition:background .15s;gap:4px}
+.budget-row:last-child{border-bottom:none}
+.budget-row:hover{background:var(--input-bg)}
+.budget-row.auto-row{background:var(--annual-badge-bg);cursor:default;grid-template-columns:1fr 130px 32px}
+.budget-row.auto-row:hover{background:var(--annual-badge-bg)}
+.budget-row.provision-row{background:var(--blue-bg);cursor:default;grid-template-columns:1fr 130px 32px}
+.budget-row.provision-row:hover{background:var(--blue-bg)}
+.budget-row.provision-row .auto-value{color:var(--blue)}
+.provision-detail-label{display:flex;flex-direction:column;gap:1px}
+.provision-detail-label .prov-name{font-size:14px;font-weight:600;color:var(--text-primary)}
+.provision-detail-label .prov-meta{font-size:11px;color:var(--text-muted);font-weight:600}
+/* Variable row: move | label | forecast | actual | delete */
+.var-row{display:grid;grid-template-columns:28px 1fr 100px 100px 32px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);transition:background .15s;gap:4px}
+.var-row:last-child{border-bottom:none}
+.var-row:hover{background:var(--input-bg)}
+.var-col-headers{display:grid;grid-template-columns:28px 1fr 100px 100px 32px;padding:4px 14px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted);gap:4px;border-bottom:1px solid var(--border)}
+.var-col-headers span:nth-child(3){text-align:right}.var-col-headers span:nth-child(4){text-align:right}
+/* Move buttons */
+.move-btns{display:flex;flex-direction:column;gap:1px;align-items:center}
+.move-btn{width:22px;height:14px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:9px;border-radius:3px;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0}
+.move-btn:hover{background:var(--border);color:var(--text-primary)}
+/* Row elements */
+.row-label{font-size:14px;font-weight:600;color:var(--text-primary)}
+.row-label input{border:none;background:transparent;font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;color:var(--text-primary);width:100%;outline:none}
+.row-label input::placeholder{color:var(--text-muted)}
+.row-label input:focus{border-bottom:2px solid var(--accent)}
+.row-amount input{border:none;background:var(--input-bg);border-radius:8px;padding:7px 10px;font-family:'Nunito',sans-serif;font-size:16px;font-weight:700;color:var(--text-primary);width:100%;text-align:right;outline:none;transition:all .2s}
+.row-amount input:focus{background:var(--bg-secondary);box-shadow:0 0 0 2px var(--accent)}
+.row-amount input.forecast-input:focus{box-shadow:0 0 0 2px var(--orange)}
+.row-amount input.actual-input{color:var(--text-primary)}
+.row-amount input.actual-input:focus{box-shadow:0 0 0 2px var(--green)}
+.row-amount .auto-value{font-family:'Nunito',sans-serif;font-size:16px;font-weight:700;color:var(--annual-badge);text-align:right;padding:7px 10px}
+.row-delete{display:flex;justify-content:center}
+.row-delete button{width:28px;height:28px;border-radius:8px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-size:12px;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.row-delete button:hover{background:var(--red-bg);color:var(--red)}
+.add-row-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px;border:none;background:transparent;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--accent);cursor:pointer;transition:all .2s}
+.add-row-btn:hover{background:var(--accent-light)}
+/* Annual rows */
+.annual-row{display:grid;grid-template-columns:28px 1fr 130px 110px 32px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);transition:background .15s;gap:4px}
+.annual-row:last-child{border-bottom:none}
+.annual-row:hover{background:var(--input-bg)}
+.month-select{padding:7px 8px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;color:var(--text-primary);outline:none;cursor:pointer;width:100%}
+.month-select:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-light)}
+/* Summaries */
+.annual-summary,.savings-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.annual-summary .summary-card .value{color:var(--annual-badge)}
+.savings-summary .summary-card .value{color:var(--savings)}
+/* Savings */
+.savings-inline{display:flex;align-items:center;justify-content:space-between;padding:14px 18px}
+.savings-inline-label{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--text-primary)}
+.savings-inline-input input{border:none;background:var(--savings-bg);border-radius:8px;padding:8px 14px;font-family:'Nunito',sans-serif;font-size:16px;font-weight:700;color:var(--savings);width:140px;text-align:right;outline:none;transition:all .2s}
+.savings-inline-input input:focus{background:var(--bg-secondary);box-shadow:0 0 0 2px var(--savings)}
+.savings-chart-container{padding:18px;position:relative}
+.savings-chart-canvas{width:100%;height:200px;display:block}
+.savings-goal-section{padding:16px 18px;border-top:1px solid var(--border)}
+.savings-goal-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.savings-goal-row label{font-size:13px;font-weight:700;color:var(--text-secondary)}
+.savings-goal-row input{border:1px solid var(--border);background:var(--input-bg);border-radius:8px;padding:8px 12px;font-family:'Nunito',sans-serif;font-size:16px;font-weight:700;color:var(--savings);width:140px;text-align:right;outline:none;transition:all .2s}
+.savings-goal-row input:focus{border-color:var(--savings);box-shadow:0 0 0 2px var(--savings-light)}
+.savings-goal-bar{width:100%;height:12px;border-radius:6px;background:var(--border);margin-top:12px;overflow:hidden}
+.savings-goal-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--savings),var(--green));transition:width .5s ease}
+.savings-goal-pct{margin-top:6px;font-size:13px;font-weight:700;color:var(--savings)}
+.savings-table-header{display:grid;grid-template-columns:50px 1fr 100px 110px;padding:10px 18px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);border-bottom:2px solid var(--border)}
+.savings-table-row{display:grid;grid-template-columns:50px 1fr 100px 110px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border);transition:background .15s}
+.savings-table-row:last-child{border-bottom:none}
+.savings-table-row:hover{background:var(--input-bg)}
+.savings-table-row .month-label{font-size:13px;font-weight:800;color:var(--text-muted)}
+.savings-table-row .month-name{font-size:14px;font-weight:700;color:var(--text-primary)}
+.savings-table-row .sav-amount{font-size:16px;font-weight:700;color:var(--savings);text-align:right}
+.savings-table-row .sav-cumul{font-family:'DM Serif Display',serif;font-size:17px;color:var(--text-primary);text-align:right}
+.savings-table-row.has-value .sav-cumul{color:var(--savings)}
+/* Distribution bars */
+.annual-month-dist{padding:14px 18px}
+.dist-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.dist-label{font-size:12px;font-weight:700;color:var(--text-muted);width:36px}
+.dist-bar{flex:1;height:8px;border-radius:4px;background:var(--border);overflow:hidden}
+.dist-bar-fill{height:100%;border-radius:4px;background:var(--annual-badge);transition:width .4s}
+.dist-bar-fill.savings-fill{background:var(--savings)}
+.dist-amount{font-size:12px;font-weight:700;color:var(--text-secondary);width:70px;text-align:right}
+/* Misc */
+.empty-state{text-align:center;padding:32px 20px;color:var(--text-muted)}
+.empty-state i{font-size:28px;margin-bottom:10px;display:block;color:var(--border)}
+.empty-state p{font-size:13px}
+.file-input-hidden{display:none}
+.year-selector{display:flex;align-items:center;gap:6px}
+.year-selector span{font-family:'DM Serif Display',serif;font-size:17px;min-width:50px;text-align:center}
+.year-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .2s}
+.year-btn:hover{border-color:var(--accent);color:var(--accent)}
+/* Modal & toast */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.show{opacity:1;pointer-events:all}
+.modal{background:var(--bg-card);border-radius:var(--radius);padding:24px;max-width:400px;width:90%;box-shadow:var(--shadow-lg);transform:translateY(20px);transition:transform .25s}
+.modal-overlay.show .modal{transform:translateY(0)}
+.modal h3{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:12px}
+.modal p{color:var(--text-secondary);font-size:14px;margin-bottom:20px;line-height:1.5}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.modal-btn{padding:10px 20px;border-radius:10px;border:none;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+.modal-btn.cancel{background:var(--bg-primary);color:var(--text-secondary)}.modal-btn.cancel:hover{background:var(--border)}
+.modal-btn.confirm{background:var(--red);color:#FFF}.modal-btn.confirm:hover{opacity:.85}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:var(--shadow-lg);z-index:300;transition:transform .3s ease;display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateX(-50%) translateY(0)}
+/* Double balance header */
+.dual-balance{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.dual-balance .bal-item{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)}
+.dual-balance .bal-val{font-family:'DM Serif Display',serif;font-size:17px}
+.bal-val.positive{color:var(--green)}.bal-val.negative{color:var(--red)}
+/* Responsive */
+@media(max-width:600px){
+  .summary-row{grid-template-columns:1fr 1fr}
+  .annual-summary,.savings-summary{grid-template-columns:1fr}
+  .budget-row{grid-template-columns:24px 1fr 100px 28px;padding:6px 10px}
+  .var-row{grid-template-columns:24px 1fr 80px 80px 28px;padding:6px 10px}
+  .var-col-headers{grid-template-columns:24px 1fr 80px 80px 28px;padding:4px 10px}
+  .annual-row{grid-template-columns:24px 1fr 100px 80px 28px;padding:6px 10px}
+  .savings-table-header{grid-template-columns:40px 1fr 80px 90px;padding:8px 12px;font-size:10px}
+  .savings-table-row{grid-template-columns:40px 1fr 80px 90px;padding:10px 12px}
+  .section-header{padding:12px 14px}
+  .summary-card .value{font-size:17px}
+  .tab-btn{padding:7px 10px;font-size:12px}
+  .header-top{flex-wrap:wrap;gap:8px}
+  .savings-inline{flex-wrap:wrap;gap:10px}
+  .row-amount input{font-size:15px;padding:6px 8px}
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.section{animation:fadeIn .35s ease forwards}
+.section:nth-child(2){animation-delay:.05s}.section:nth-child(3){animation-delay:.1s}
+.section:nth-child(4){animation-delay:.15s}.section:nth-child(5){animation-delay:.2s}
 </style>
 </head>
 <body>
-
 <div class="app-header">
   <div class="header-top">
-    <div class="logo">
-      <div class="logo-icon"><i class="fas fa-wallet"></i></div>
-      <h1>Mon Budget</h1>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;">
+    <div class="logo"><div class="logo-icon"><i class="fas fa-wallet"></i></div><h1>Mon Budget</h1></div>
+    <div style="display:flex;align-items:center;gap:10px">
       <div class="year-selector">
         <button class="year-btn" onclick="changeYear(-1)"><i class="fas fa-chevron-left"></i></button>
         <span id="yearDisplay">2025</span>
@@ -468,777 +233,328 @@
   </div>
   <div class="tabs-container" id="tabsContainer"></div>
 </div>
-
 <div class="main-content" id="mainContent"></div>
-
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal" id="modalContent"></div>
-</div>
-
-<div class="toast" id="toast">
-  <span class="toast-icon"></span>
-  <span class="toast-text"></span>
-</div>
-
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalContent"></div></div>
+<div class="toast" id="toast"><span class="toast-icon"></span><span class="toast-text"></span></div>
 <input type="file" class="file-input-hidden" id="fileInput" accept=".json" onchange="importData(event)">
 
 <script>
-var MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-var MONTHS_SHORT = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+var MONTHS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+var MONTHS_SHORT=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+var DEF_INCOME=[{label:'Salaire',amount:0}];
+var DEF_EXPENSES=[{label:'Loyer',amount:0},{label:'Courses',amount:0},{label:'Électricité / Gaz',amount:0},{label:'Internet / Téléphone',amount:0},{label:'Transport',amount:0},{label:'Assurances',amount:0},{label:'Loisirs',amount:0}];
+var DEF_VARIABLE=[{label:'Sorties / Restaurant',forecast:0,actual:0},{label:'Shopping',forecast:0,actual:0},{label:'Divers',forecast:0,actual:0}];
 
-var DEFAULT_INCOME_ROWS = [
-  { label: 'Salaire', amount: 0 }
-];
-var DEFAULT_EXPENSE_ROWS = [
-  { label: 'CB', amount: 0 },
-  { label: 'Spotify', amount: 0 },
-  { label: 'PEL', amount: 0 },
-  { label: 'PER', amount: 0 },
-  { label: 'Auchan', amount: 0 },
-  { label: 'SFR', amount: 0 },
-  { label: 'Crédit', amount: 0 },
-  { label: 'Eau', amount: 0 },
-  { label: 'EDF', amount: 0 }
-];
+var currentYear=new Date().getFullYear(), currentTab=0, data={};
+var STORAGE_KEY='monbudget_data', _store=(function(){try{var s=window['local'+'Storage'];s.setItem('__t','1');s.removeItem('__t');return s}catch(e){return null}})();
+function saveToStorage(){if(!_store)return;try{_store.setItem(STORAGE_KEY,JSON.stringify(data))}catch(e){}}
+function loadFromStorage(){if(!_store)return false;try{var s=_store.getItem(STORAGE_KEY);if(s){var p=JSON.parse(s);if(typeof p==='object'&&p!==null){data=p;return true}}}catch(e){}return false}
+function getYearKey(){return 'y'+currentYear}
 
-var currentYear = new Date().getFullYear();
-var currentTab = 0;
-var data = {};
-var STORAGE_KEY = 'monbudget_data';
-var storageAvailable = false;
-
-// TAB indexes: 0-11 = months, 12 = annual, 13 = savings
-
-// ========== PERSISTENCE (storage with fallback) ==========
-// Access storage indirectly to work in environments where direct access is restricted
-var _store = (function() {
-  try {
-    var s = window['local' + 'Storage'];
-    var t = '__test__';
-    s.setItem(t, '1');
-    s.removeItem(t);
-    return s;
-  } catch (e) {
-    return null;
+function initYearData(){
+  var key=getYearKey();
+  if(!data[key]){
+    data[key]={months:[],annualExpenses:[],savingsGoal:0};
+    for(var i=0;i<12;i++) data[key].months.push({
+      income:JSON.parse(JSON.stringify(DEF_INCOME)),
+      expenses:JSON.parse(JSON.stringify(DEF_EXPENSES)),
+      variableExpenses:JSON.parse(JSON.stringify(DEF_VARIABLE)),
+      savings:0
+    });
   }
-})();
-storageAvailable = !!_store;
-
-function saveToStorage() {
-  if (!_store) return;
-  try {
-    _store.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (e) {
-    // Storage full or blocked — silent fail
+  var yd=data[key];
+  if(typeof yd.savingsGoal==='undefined') yd.savingsGoal=0;
+  for(var j=0;j<12;j++){
+    var md=yd.months[j];
+    if(typeof md.savings==='undefined') md.savings=0;
+    if(!md.variableExpenses) md.variableExpenses=JSON.parse(JSON.stringify(DEF_VARIABLE));
   }
 }
 
-function loadFromStorage() {
-  if (!_store) return false;
-  try {
-    var stored = _store.getItem(STORAGE_KEY);
-    if (stored) {
-      var parsed = JSON.parse(stored);
-      if (typeof parsed === 'object' && parsed !== null) {
-        data = parsed;
-        return true;
-      }
-    }
-  } catch (e) {
-    // Corrupted data — silent fail
+function gM(m){initYearData();return data[getYearKey()].months[m]}
+function gAE(){initYearData();return data[getYearKey()].annualExpenses}
+function gSG(){initYearData();return data[getYearKey()].savingsGoal||0}
+function sSG(v){initYearData();data[getYearKey()].savingsGoal=parseFloat(v)||0}
+function gAFM(mi){return gAE().filter(function(a){return a.month===mi})}
+function gATFM(mi){return gAFM(mi).reduce(function(s,a){return s+(parseFloat(a.amount)||0)},0)}
+function gTI(m){return gM(m).income.reduce(function(s,r){return s+(parseFloat(r.amount)||0)},0)}
+function gTE(m){return gM(m).expenses.reduce(function(s,r){return s+(parseFloat(r.amount)||0)},0)}
+function gMS(m){return parseFloat(gM(m).savings)||0}
+function gVF(m){return gM(m).variableExpenses.reduce(function(s,r){return s+(parseFloat(r.forecast)||0)},0)}
+function gVA(m){return gM(m).variableExpenses.reduce(function(s,r){return s+(parseFloat(r.actual)||0)},0)}
+
+// Provision
+function gAPFM(mi){
+  var annuals=gAE(),total=0,details=[];
+  for(var i=0;i<annuals.length;i++){
+    var a=annuals[i],dm=a.month,amt=parseFloat(a.amount)||0;
+    if(amt<=0||dm===0)continue;
+    if(mi<dm){var ms=dm,mc=amt/ms;total+=mc;details.push({label:a.label||'Dépense annuelle',monthlyAmount:mc,fullAmount:amt,dueMonth:dm,monthsToSave:ms})}
   }
-  return false;
+  return{total:total,details:details};
 }
+function gPTFM(mi){return gAPFM(mi).total}
 
-function getYearKey() { return 'y' + currentYear; }
+// Balances
+function balForecast(m){return gTI(m)-gTE(m)-gATFM(m)-gMS(m)-gPTFM(m)-gVF(m)}
+function balActual(m){return gTI(m)-gTE(m)-gATFM(m)-gMS(m)-gPTFM(m)-gVA(m)}
+function gTSY(){var t=0;for(var i=0;i<12;i++)t+=gMS(i);return t}
+function gCS(u){var t=0;for(var i=0;i<=u;i++)t+=gMS(i);return t}
+function fmt(n){return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(n)}
 
-function initYearData() {
-  var key = getYearKey();
-  if (!data[key]) {
-    data[key] = {
-      months: [],
-      annualExpenses: [],
-      savingsGoal: 0
-    };
-    for (var i = 0; i < 12; i++) {
-      data[key].months.push({
-        income: JSON.parse(JSON.stringify(DEFAULT_INCOME_ROWS)),
-        expenses: JSON.parse(JSON.stringify(DEFAULT_EXPENSE_ROWS)),
-        savings: 0
-      });
-    }
+// Dark mode
+if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.classList.add('dark');
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(e){if(e.matches)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark')});
+
+// ===== TABS =====
+function renderTabs(){
+  var c=document.getElementById('tabsContainer'),h='';
+  for(var i=0;i<12;i++){
+    var bf=balForecast(i),cls=bf>=0?'positive':'negative',act=currentTab===i?' active':'';
+    h+='<button class="tab-btn'+act+'" onclick="switchTab('+i+')">'+MONTHS_SHORT[i]+'<span class="tab-balance '+cls+'">'+fmt(bf)+'</span></button>';
   }
-  // Migrate old data that may not have savings fields
-  var yd = data[key];
-  if (typeof yd.savingsGoal === 'undefined') yd.savingsGoal = 0;
-  for (var j = 0; j < 12; j++) {
-    if (typeof yd.months[j].savings === 'undefined') yd.months[j].savings = 0;
-  }
+  h+='<button class="tab-btn annual-tab'+(currentTab===12?' active':'')+'" onclick="switchTab(12)"><i class="fas fa-calendar-alt"></i> Annuelles</button>';
+  h+='<button class="tab-btn savings-tab'+(currentTab===13?' active':'')+'" onclick="switchTab(13)"><i class="fas fa-piggy-bank"></i> Épargne';
+  var ts=gTSY();if(ts>0)h+='<span class="tab-balance positive">'+fmt(ts)+'</span>';
+  h+='</button>';
+  c.innerHTML=h;
+}
+function switchTab(i){currentTab=i;renderTabs();renderContent();var b=document.querySelectorAll('.tab-btn');if(b[i])b[i].scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})}
+
+// ===== RENDER =====
+function renderContent(){
+  if(currentTab<12)renderMonthPage(currentTab);
+  else if(currentTab===12)renderAnnualPage();
+  else renderSavingsPage();
 }
 
-function getMonthData(m) { initYearData(); return data[getYearKey()].months[m]; }
-function getAnnualExpenses() { initYearData(); return data[getYearKey()].annualExpenses; }
-function getSavingsGoal() { initYearData(); return data[getYearKey()].savingsGoal || 0; }
-function setSavingsGoal(val) { initYearData(); data[getYearKey()].savingsGoal = parseFloat(val) || 0; }
-
-function getAnnualForMonth(monthIndex) {
-  return getAnnualExpenses().filter(function(a) { return a.month === monthIndex; });
-}
-function getAnnualTotalForMonth(monthIndex) {
-  return getAnnualForMonth(monthIndex).reduce(function(s, a) { return s + (parseFloat(a.amount) || 0); }, 0);
-}
-function getTotalIncome(m) {
-  return getMonthData(m).income.reduce(function(s, r) { return s + (parseFloat(r.amount) || 0); }, 0);
-}
-function getTotalExpenses(m) {
-  return getMonthData(m).expenses.reduce(function(s, r) { return s + (parseFloat(r.amount) || 0); }, 0);
-}
-function getMonthSavings(m) { return parseFloat(getMonthData(m).savings) || 0; }
-
-// ========== ANNUAL PROVISION ==========
-// For each annual expense due in month M (M>0):
-//   monthly provision = amount / M, applied in months 0 to M-1
-// For M=0 (January): no provisioning, full amount shows in "Sorties annuelles"
-function getAnnualProvisionForMonth(monthIndex) {
-  var annuals = getAnnualExpenses();
-  var total = 0;
-  var details = [];
-  for (var i = 0; i < annuals.length; i++) {
-    var a = annuals[i];
-    var dueMonth = a.month;
-    var amount = parseFloat(a.amount) || 0;
-    if (amount <= 0 || dueMonth === 0) continue;
-    // Only provision in months BEFORE the due month
-    if (monthIndex < dueMonth) {
-      var monthsToSave = dueMonth; // months 0 to dueMonth-1
-      var monthlyContrib = amount / monthsToSave;
-      total += monthlyContrib;
-      details.push({
-        label: a.label || 'Dépense annuelle',
-        monthlyAmount: monthlyContrib,
-        fullAmount: amount,
-        dueMonth: dueMonth,
-        monthsToSave: monthsToSave
-      });
-    }
-  }
-  return { total: total, details: details };
+function moveBtns(type,m,idx,len){
+  var h='<div class="move-btns">';
+  h+='<button class="move-btn" '+(idx===0?'disabled style="opacity:.2"':'onclick="moveRow(\''+type+'\','+m+','+idx+',-1)"')+'><i class="fas fa-chevron-up"></i></button>';
+  h+='<button class="move-btn" '+(idx>=len-1?'disabled style="opacity:.2"':'onclick="moveRow(\''+type+'\','+m+','+idx+',1)"')+'><i class="fas fa-chevron-down"></i></button>';
+  h+='</div>';return h;
 }
 
-function getProvisionTotalForMonth(monthIndex) {
-  return getAnnualProvisionForMonth(monthIndex).total;
-}
-
-function getMonthBalance(m) {
-  return getTotalIncome(m) - getTotalExpenses(m) - getAnnualTotalForMonth(m) - getMonthSavings(m) - getProvisionTotalForMonth(m);
-}
-function getTotalSavingsYear() {
-  var total = 0;
-  for (var i = 0; i < 12; i++) total += getMonthSavings(i);
-  return total;
-}
-function getCumulativeSavings(upToMonth) {
-  var total = 0;
-  for (var i = 0; i <= upToMonth; i++) total += getMonthSavings(i);
-  return total;
-}
-
-function fmt(n) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n);
-}
-
-// ========== DARK MODE ==========
-if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-  document.documentElement.classList.add('dark');
-}
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(event) {
-  if (event.matches) { document.documentElement.classList.add('dark'); }
-  else { document.documentElement.classList.remove('dark'); }
-});
-
-// ========== TABS ==========
-function renderTabs() {
-  var container = document.getElementById('tabsContainer');
-  var html = '';
-  for (var i = 0; i < 12; i++) {
-    var bal = getMonthBalance(i);
-    var balClass = bal >= 0 ? 'positive' : 'negative';
-    var active = currentTab === i ? ' active' : '';
-    html += '<button class="tab-btn' + active + '" onclick="switchTab(' + i + ')">';
-    html += MONTHS_SHORT[i];
-    html += '<span class="tab-balance ' + balClass + '">' + fmt(bal) + '</span>';
-    html += '</button>';
-  }
-  var activeAnnual = currentTab === 12 ? ' active' : '';
-  html += '<button class="tab-btn annual-tab' + activeAnnual + '" onclick="switchTab(12)">';
-  html += '<i class="fas fa-calendar-alt"></i> Annuelles</button>';
-
-  var activeSavings = currentTab === 13 ? ' active' : '';
-  html += '<button class="tab-btn savings-tab' + activeSavings + '" onclick="switchTab(13)">';
-  html += '<i class="fas fa-piggy-bank"></i> Épargne';
-  var totalSav = getTotalSavingsYear();
-  if (totalSav > 0) {
-    html += '<span class="tab-balance positive">' + fmt(totalSav) + '</span>';
-  }
-  html += '</button>';
-  container.innerHTML = html;
-}
-
-function switchTab(index) {
-  currentTab = index;
-  renderTabs();
-  renderContent();
-  var btns = document.querySelectorAll('.tab-btn');
-  if (btns[index]) {
-    btns[index].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-  }
-}
-
-// ========== CONTENT ==========
-function renderContent() {
-  if (currentTab < 12) { renderMonthPage(currentTab); }
-  else if (currentTab === 12) { renderAnnualPage(); }
-  else { renderSavingsPage(); }
-}
-
-function renderMonthPage(m) {
-  var md = getMonthData(m);
-  var totalIncome = getTotalIncome(m);
-  var totalExpenses = getTotalExpenses(m);
-  var annualTotal = getAnnualTotalForMonth(m);
-  var savingsAmount = getMonthSavings(m);
-  var provision = getAnnualProvisionForMonth(m);
-  var provisionTotal = provision.total;
-  var balance = totalIncome - totalExpenses - annualTotal - savingsAmount - provisionTotal;
-  var totalOut = totalExpenses + annualTotal + provisionTotal;
-  var ratio = totalIncome > 0 ? Math.min(100, Math.max(0, (balance / totalIncome) * 100)) : 0;
-
-  var html = '';
-  // Summary cards
-  html += '<div class="summary-row">';
-  html += '<div class="summary-card income"><div class="label">Revenus</div><div class="value">' + fmt(totalIncome) + '</div></div>';
-  html += '<div class="summary-card expense"><div class="label">Dépenses</div><div class="value">' + fmt(totalOut) + '</div></div>';
-  html += '<div class="summary-card savings-card"><div class="label">Épargne</div><div class="value">' + fmt(savingsAmount) + '</div></div>';
-  html += '<div class="summary-card balance"><div class="label">Solde</div><div class="value ' + (balance >= 0 ? 'positive' : 'negative') + '">' + fmt(balance) + '</div>';
-  html += '<div class="balance-bar"><div class="balance-bar-fill ' + (balance >= 0 ? 'positive' : 'negative') + '" style="width:' + Math.abs(ratio) + '%"></div></div>';
-  html += '</div></div>';
+function renderMonthPage(m){
+  var md=gM(m),ti=gTI(m),te=gTE(m),at=gATFM(m),sv=gMS(m),prov=gAPFM(m),pt=prov.total;
+  var vf=gVF(m),va=gVA(m);
+  var bf=ti-te-at-sv-pt-vf, ba=ti-te-at-sv-pt-va;
+  var totalOutF=te+at+pt+vf, totalOutA=te+at+pt+va;
+  var h='';
+  // Summary
+  h+='<div class="summary-row">';
+  h+='<div class="summary-card income"><div class="label">Revenus</div><div class="value">'+fmt(ti)+'</div></div>';
+  h+='<div class="summary-card expense"><div class="label">Dépenses</div><div class="value">'+fmt(totalOutF)+'</div></div>';
+  h+='<div class="summary-card balance"><div class="label">Solde prévisionnel</div><div class="value '+(bf>=0?'positive':'negative')+'">'+fmt(bf)+'</div>';
+  var ratioF=ti>0?Math.min(100,Math.max(0,(bf/ti)*100)):0;
+  h+='<div class="balance-bar"><div class="balance-bar-fill '+(bf>=0?'positive':'negative')+'" style="width:'+Math.abs(ratioF)+'%"></div></div></div>';
+  h+='<div class="summary-card balance"><div class="label">Solde réel</div><div class="value '+(ba>=0?'positive':'negative')+'">'+fmt(ba)+'</div>';
+  var ratioA=ti>0?Math.min(100,Math.max(0,(ba/ti)*100)):0;
+  h+='<div class="balance-bar"><div class="balance-bar-fill '+(ba>=0?'positive':'negative')+'" style="width:'+Math.abs(ratioA)+'%"></div></div></div>';
+  h+='</div>';
 
   // Income
-  html += '<div class="section">';
-  html += '<div class="section-header"><div class="section-title"><span class="icon income-icon"><i class="fas fa-arrow-down"></i></span>Revenus</div>';
-  html += '<div class="section-total income-total">' + fmt(totalIncome) + '</div></div>';
-  for (var i = 0; i < md.income.length; i++) {
-    html += buildEditableRow('income', m, i, md.income[i]);
-  }
-  html += '<button class="add-row-btn" onclick="addRow(\'income\',' + m + ')"><i class="fas fa-plus"></i> Ajouter un revenu</button>';
-  html += '</div>';
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon income-icon"><i class="fas fa-arrow-down"></i></span>Revenus</div><div class="section-total income-total">'+fmt(ti)+'</div></div>';
+  for(var i=0;i<md.income.length;i++) h+=buildRow('income',m,i,md.income[i],md.income.length);
+  h+='<button class="add-row-btn" onclick="syncAddRow(\'income\','+m+')"><i class="fas fa-plus"></i> Ajouter un revenu</button></div>';
 
-  // Expenses
-  html += '<div class="section">';
-  html += '<div class="section-header"><div class="section-title"><span class="icon expense-icon"><i class="fas fa-arrow-up"></i></span>Dépenses mensuelles</div>';
-  html += '<div class="section-total expense-total">' + fmt(totalExpenses) + '</div></div>';
-  for (var j = 0; j < md.expenses.length; j++) {
-    html += buildEditableRow('expenses', m, j, md.expenses[j]);
-  }
-  html += '<button class="add-row-btn" onclick="addRow(\'expenses\',' + m + ')"><i class="fas fa-plus"></i> Ajouter une dépense</button>';
-  html += '</div>';
+  // Fixed expenses
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon expense-icon"><i class="fas fa-arrow-up"></i></span>Dépenses fixes</div><div class="section-total expense-total">'+fmt(te)+'</div></div>';
+  for(var j=0;j<md.expenses.length;j++) h+=buildRow('expenses',m,j,md.expenses[j],md.expenses.length);
+  h+='<button class="add-row-btn" onclick="syncAddRow(\'expenses\','+m+')"><i class="fas fa-plus"></i> Ajouter une dépense fixe</button></div>';
 
-  // Provision for annual expenses (AUTO)
-  html += '<div class="section">';
-  html += '<div class="section-header"><div class="section-title"><span class="icon provision-icon"><i class="fas fa-vault"></i></span>Épargne dép. annuelles<span class="provision-badge">AUTO</span></div>';
-  html += '<div class="section-total provision-total">' + fmt(provisionTotal) + '</div></div>';
-  if (provision.details.length === 0) {
-    html += '<div class="empty-state"><i class="fas fa-check-circle"></i><p>Aucun provisionnement ce mois.<br>Les dépenses annuelles à venir apparaîtront ici.</p></div>';
-  } else {
-    for (var p = 0; p < provision.details.length; p++) {
-      var prov = provision.details[p];
-      var remainingMonths = prov.dueMonth - m;
-      html += '<div class="budget-row provision-row">';
-      html += '<div class="row-label"><div class="provision-detail-label">';
-      html += '<span class="prov-name">' + escapeHtml(prov.label) + '</span>';
-      html += '<span class="prov-meta">' + fmt(prov.fullAmount) + ' en ' + MONTHS[prov.dueMonth] + ' — encore ' + remainingMonths + ' mois</span>';
-      html += '</div></div>';
-      html += '<div class="row-amount"><div class="auto-value">' + fmt(prov.monthlyAmount) + '</div></div>';
-      html += '<div class="row-delete"></div></div>';
-    }
-  }
-  html += '</div>';
+  // Variable expenses
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon variable-icon"><i class="fas fa-shuffle"></i></span>Dépenses variables</div>';
+  h+='<div style="text-align:right"><div style="font-size:11px;font-weight:700;color:var(--text-muted)">Prévu: <span style="color:var(--orange)">'+fmt(vf)+'</span></div>';
+  h+='<div style="font-size:11px;font-weight:700;color:var(--text-muted)">Réel: <span style="color:var(--text-primary)">'+fmt(va)+'</span></div></div></div>';
+  h+='<div class="var-col-headers"><span></span><span>Intitulé</span><span style="text-align:right">Prévu</span><span style="text-align:right">Réel</span><span></span></div>';
+  for(var v=0;v<md.variableExpenses.length;v++) h+=buildVarRow(m,v,md.variableExpenses[v],md.variableExpenses.length);
+  h+='<button class="add-row-btn" onclick="syncAddRow(\'variableExpenses\','+m+')"><i class="fas fa-plus"></i> Ajouter une dépense variable</button></div>';
 
-  // Annual auto (expenses due THIS month)
-  var annuals = getAnnualForMonth(m);
-  html += '<div class="section">';
-  html += '<div class="section-header"><div class="section-title"><span class="icon annual-icon"><i class="fas fa-calendar-check"></i></span>Sorties annuelles<span class="auto-badge">AUTO</span></div>';
-  html += '<div class="section-total annual-total">' + fmt(annualTotal) + '</div></div>';
-  if (annuals.length === 0) {
-    html += '<div class="empty-state"><i class="fas fa-calendar-xmark"></i><p>Aucune dépense annuelle prévue ce mois.<br>Ajoutez-en depuis l\'onglet <strong>Annuelles</strong>.</p></div>';
-  } else {
-    for (var k = 0; k < annuals.length; k++) {
-      html += '<div class="budget-row auto-row">';
-      html += '<div class="row-label">' + escapeHtml(annuals[k].label) + '</div>';
-      html += '<div class="row-amount"><div class="auto-value">' + fmt(annuals[k].amount) + '</div></div>';
-      html += '<div class="row-delete"></div></div>';
-    }
-  }
-  html += '</div>';
+  // Provision
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon provision-icon"><i class="fas fa-vault"></i></span>Épargne dép. annuelles<span class="provision-badge">AUTO</span></div><div class="section-total provision-total">'+fmt(pt)+'</div></div>';
+  if(prov.details.length===0){h+='<div class="empty-state"><i class="fas fa-check-circle"></i><p>Aucun provisionnement ce mois.</p></div>';}
+  else{for(var p=0;p<prov.details.length;p++){var pr=prov.details[p],rm=pr.dueMonth-m;h+='<div class="budget-row provision-row"><div class="row-label"><div class="provision-detail-label"><span class="prov-name">'+escapeHtml(pr.label)+'</span><span class="prov-meta">'+fmt(pr.fullAmount)+' en '+MONTHS[pr.dueMonth]+' — encore '+rm+' mois</span></div></div><div class="row-amount"><div class="auto-value">'+fmt(pr.monthlyAmount)+'</div></div><div class="row-delete"></div></div>';}}
+  h+='</div>';
 
-  // Savings section
-  html += '<div class="section">';
-  html += '<div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-piggy-bank"></i></span>Épargne du mois</div>';
-  html += '<div class="section-total savings-total">' + fmt(savingsAmount) + '</div></div>';
-  html += '<div class="savings-inline">';
-  html += '<div class="savings-inline-label"><i class="fas fa-coins" style="color:var(--savings)"></i> Montant à épargner</div>';
-  html += '<div class="savings-inline-input"><input type="number" inputmode="decimal" value="' + (savingsAmount || '') + '" placeholder="0" ';
-  html += 'onfocus="this.select()" onchange="updateSavings(' + m + ',this.value)"></div>';
-  html += '</div></div>';
+  // Annual due this month
+  var annuals=gAFM(m);
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon annual-icon"><i class="fas fa-calendar-check"></i></span>Sorties annuelles<span class="auto-badge">AUTO</span></div><div class="section-total annual-total">'+fmt(at)+'</div></div>';
+  if(annuals.length===0){h+='<div class="empty-state"><i class="fas fa-calendar-xmark"></i><p>Aucune sortie annuelle ce mois.</p></div>';}
+  else{for(var k=0;k<annuals.length;k++){h+='<div class="budget-row auto-row"><div class="row-label">'+escapeHtml(annuals[k].label)+'</div><div class="row-amount"><div class="auto-value">'+fmt(annuals[k].amount)+'</div></div><div class="row-delete"></div></div>';}}
+  h+='</div>';
 
-  document.getElementById('mainContent').innerHTML = html;
+  // Savings
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-piggy-bank"></i></span>Épargne du mois</div><div class="section-total savings-total">'+fmt(sv)+'</div></div>';
+  h+='<div class="savings-inline"><div class="savings-inline-label"><i class="fas fa-coins" style="color:var(--savings)"></i> Montant</div>';
+  h+='<div class="savings-inline-input"><input type="number" inputmode="decimal" value="'+(sv||'')+'" placeholder="0" onfocus="this.select()" onchange="updateSavings('+m+',this.value)"></div></div></div>';
+
+  document.getElementById('mainContent').innerHTML=h;
 }
 
-function buildEditableRow(type, m, idx, row) {
-  var html = '<div class="budget-row">';
-  html += '<div class="row-label"><input type="text" value="' + escapeAttr(row.label) + '" placeholder="Intitulé…" ';
-  html += 'onchange="updateLabel(\'' + type + '\',' + m + ',' + idx + ',this.value)"></div>';
-  html += '<div class="row-amount"><input type="number" inputmode="decimal" value="' + (row.amount || '') + '" placeholder="0" ';
-  html += 'onfocus="this.select()" onchange="updateAmount(\'' + type + '\',' + m + ',' + idx + ',this.value)"></div>';
-  html += '<div class="row-delete"><button onclick="deleteRow(\'' + type + '\',' + m + ',' + idx + ')"><i class="fas fa-xmark"></i></button></div>';
-  html += '</div>';
-  return html;
+function buildRow(type,m,idx,row,len){
+  var h='<div class="budget-row">'+moveBtns(type,m,idx,len);
+  h+='<div class="row-label"><input type="text" value="'+escapeAttr(row.label)+'" placeholder="Intitulé…" onchange="syncLabel(\''+type+'\','+m+','+idx+',this.value)"></div>';
+  h+='<div class="row-amount"><input type="number" inputmode="decimal" value="'+(row.amount||'')+'" placeholder="0" onfocus="this.select()" onchange="updateAmount(\''+type+'\','+m+','+idx+',this.value)"></div>';
+  h+='<div class="row-delete"><button onclick="syncDeleteRow(\''+type+'\','+m+','+idx+')"><i class="fas fa-xmark"></i></button></div></div>';
+  return h;
 }
 
-function renderAnnualPage() {
-  var annuals = getAnnualExpenses();
-  var totalAnnual = annuals.reduce(function(s, a) { return s + (parseFloat(a.amount) || 0); }, 0);
-  var monthlyAvg = totalAnnual / 12;
-  var perMonth = [];
-  var maxMonth = 0;
-  for (var mi = 0; mi < 12; mi++) {
-    var t = getAnnualTotalForMonth(mi);
-    perMonth.push(t);
-    if (t > maxMonth) maxMonth = t;
-  }
-  var totalIncomeYear = 0, totalExpensesYear = 0, totalProvisionYear = 0;
-  for (var yi = 0; yi < 12; yi++) {
-    totalIncomeYear += getTotalIncome(yi);
-    totalExpensesYear += getTotalExpenses(yi);
-  }
-  // Note: provisions are already part of the monthly deductions for balance display,
-  // but for the annual overview the actual annual expenses are what matters
-  var yearBalance = totalIncomeYear - totalExpensesYear - totalAnnual - getTotalSavingsYear();
-
-  var html = '';
-  html += '<div class="annual-summary">';
-  html += '<div class="summary-card"><div class="label">Total annuel</div><div class="value">' + fmt(totalAnnual) + '</div></div>';
-  html += '<div class="summary-card"><div class="label">Moyenne / mois</div><div class="value">' + fmt(monthlyAvg) + '</div></div>';
-  html += '<div class="summary-card balance"><div class="label">Bilan année</div><div class="value ' + (yearBalance >= 0 ? 'positive' : 'negative') + '">' + fmt(yearBalance) + '</div></div>';
-  html += '</div>';
-
-  html += '<div class="section">';
-  html += '<div class="section-header"><div class="section-title"><span class="icon annual-icon"><i class="fas fa-chart-bar"></i></span>Répartition mensuelle</div></div>';
-  html += '<div class="annual-month-dist">';
-  for (var di = 0; di < 12; di++) {
-    var pct = maxMonth > 0 ? (perMonth[di] / maxMonth) * 100 : 0;
-    html += '<div class="dist-row">';
-    html += '<span class="dist-label">' + MONTHS_SHORT[di] + '</span>';
-    html += '<div class="dist-bar"><div class="dist-bar-fill" style="width:' + pct + '%"></div></div>';
-    html += '<span class="dist-amount">' + fmt(perMonth[di]) + '</span>';
-    html += '</div>';
-  }
-  html += '</div></div>';
-
-  html += '<div class="section">';
-  html += '<div class="section-header"><div class="section-title"><span class="icon annual-icon"><i class="fas fa-calendar-alt"></i></span>Dépenses annuelles</div>';
-  html += '<div class="section-total annual-total">' + fmt(totalAnnual) + '</div></div>';
-  if (annuals.length === 0) {
-    html += '<div class="empty-state"><i class="fas fa-calendar-plus"></i><p>Aucune dépense annuelle.<br>Ajoutez vos charges annuelles ici.</p></div>';
-  } else {
-    for (var ai = 0; ai < annuals.length; ai++) {
-      html += buildAnnualRow(ai, annuals[ai]);
-    }
-  }
-  html += '<button class="add-row-btn" onclick="addAnnualExpense()"><i class="fas fa-plus"></i> Ajouter une dépense annuelle</button>';
-  html += '</div>';
-
-  document.getElementById('mainContent').innerHTML = html;
+function buildVarRow(m,idx,row,len){
+  var h='<div class="var-row">'+moveBtns('variableExpenses',m,idx,len);
+  h+='<div class="row-label"><input type="text" value="'+escapeAttr(row.label)+'" placeholder="Intitulé…" onchange="syncLabel(\'variableExpenses\','+m+','+idx+',this.value)"></div>';
+  h+='<div class="row-amount"><input type="number" inputmode="decimal" class="forecast-input" value="'+(row.forecast||'')+'" placeholder="0" onfocus="this.select()" onchange="updateVarAmount('+m+','+idx+',\'forecast\',this.value)"></div>';
+  h+='<div class="row-amount"><input type="number" inputmode="decimal" class="actual-input" value="'+(row.actual||'')+'" placeholder="0" onfocus="this.select()" onchange="updateVarAmount('+m+','+idx+',\'actual\',this.value)"></div>';
+  h+='<div class="row-delete"><button onclick="syncDeleteRow(\'variableExpenses\','+m+','+idx+')"><i class="fas fa-xmark"></i></button></div></div>';
+  return h;
 }
 
-function buildAnnualRow(idx, row) {
-  var html = '<div class="annual-row">';
-  html += '<div class="row-label"><input type="text" value="' + escapeAttr(row.label) + '" placeholder="Intitulé…" ';
-  html += 'onchange="updateAnnualLabel(' + idx + ',this.value)"></div>';
-  html += '<div class="row-amount"><input type="number" inputmode="decimal" value="' + (row.amount || '') + '" placeholder="0" ';
-  html += 'onfocus="this.select()" onchange="updateAnnualAmount(' + idx + ',this.value)"></div>';
-  html += '<div><select class="month-select" onchange="updateAnnualMonth(' + idx + ',this.value)">';
-  for (var sm = 0; sm < 12; sm++) {
-    var sel = sm === row.month ? ' selected' : '';
-    html += '<option value="' + sm + '"' + sel + '>' + MONTHS_SHORT[sm] + '</option>';
-  }
-  html += '</select></div>';
-  html += '<div class="row-delete"><button onclick="deleteAnnualExpense(' + idx + ')"><i class="fas fa-xmark"></i></button></div>';
-  html += '</div>';
-  return html;
+// ===== ANNUAL PAGE =====
+function renderAnnualPage(){
+  var annuals=gAE(),ta=annuals.reduce(function(s,a){return s+(parseFloat(a.amount)||0)},0),avg=ta/12;
+  var perMonth=[],mx=0;
+  for(var mi=0;mi<12;mi++){var t=gATFM(mi);perMonth.push(t);if(t>mx)mx=t}
+  var tiy=0,tey=0;for(var yi=0;yi<12;yi++){tiy+=gTI(yi);tey+=gTE(yi)}
+  var yb=tiy-tey-ta-gTSY();
+  var h='<div class="annual-summary">';
+  h+='<div class="summary-card"><div class="label">Total annuel</div><div class="value" style="color:var(--annual-badge)">'+fmt(ta)+'</div></div>';
+  h+='<div class="summary-card"><div class="label">Moyenne / mois</div><div class="value" style="color:var(--annual-badge)">'+fmt(avg)+'</div></div>';
+  h+='<div class="summary-card balance"><div class="label">Bilan année</div><div class="value '+(yb>=0?'positive':'negative')+'">'+fmt(yb)+'</div></div></div>';
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon annual-icon"><i class="fas fa-chart-bar"></i></span>Répartition mensuelle</div></div><div class="annual-month-dist">';
+  for(var di=0;di<12;di++){var pct=mx>0?(perMonth[di]/mx)*100:0;h+='<div class="dist-row"><span class="dist-label">'+MONTHS_SHORT[di]+'</span><div class="dist-bar"><div class="dist-bar-fill" style="width:'+pct+'%"></div></div><span class="dist-amount">'+fmt(perMonth[di])+'</span></div>';}
+  h+='</div></div>';
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon annual-icon"><i class="fas fa-calendar-alt"></i></span>Dépenses annuelles</div><div class="section-total annual-total">'+fmt(ta)+'</div></div>';
+  if(annuals.length===0){h+='<div class="empty-state"><i class="fas fa-calendar-plus"></i><p>Aucune dépense annuelle.</p></div>';}
+  else{for(var ai=0;ai<annuals.length;ai++)h+=buildAnnualRow(ai,annuals[ai],annuals.length)}
+  h+='<button class="add-row-btn" onclick="addAnnualExpense()"><i class="fas fa-plus"></i> Ajouter une dépense annuelle</button></div>';
+  document.getElementById('mainContent').innerHTML=h;
 }
 
-// ========== SAVINGS PAGE ==========
-function renderSavingsPage() {
-  var totalSav = getTotalSavingsYear();
-  var goal = getSavingsGoal();
-  var avgSav = totalSav / 12;
-  var goalPct = goal > 0 ? Math.min(100, (totalSav / goal) * 100) : 0;
-
-  // Per-month savings for chart
-  var monthlySavings = [];
-  var maxSav = 0;
-  for (var si = 0; si < 12; si++) {
-    var sv = getMonthSavings(si);
-    monthlySavings.push(sv);
-    if (sv > maxSav) maxSav = sv;
-  }
-
-  var html = '';
-  // Summary
-  html += '<div class="savings-summary">';
-  html += '<div class="summary-card savings-card"><div class="label">Total épargné</div><div class="value">' + fmt(totalSav) + '</div></div>';
-  html += '<div class="summary-card savings-card"><div class="label">Moyenne / mois</div><div class="value">' + fmt(avgSav) + '</div></div>';
-  if (goal > 0) {
-    html += '<div class="summary-card savings-card"><div class="label">Objectif</div><div class="value">' + fmt(goal) + '</div></div>';
-  } else {
-    html += '<div class="summary-card"><div class="label">Objectif</div><div class="value" style="color:var(--text-muted)">Non défini</div></div>';
-  }
-  html += '</div>';
-
-  // Goal section
-  html += '<div class="section">';
-  html += '<div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-bullseye"></i></span>Objectif annuel</div></div>';
-  html += '<div class="savings-goal-section">';
-  html += '<div class="savings-goal-row">';
-  html += '<label for="goalInput">Montant cible :</label>';
-  html += '<input type="number" inputmode="decimal" id="goalInput" value="' + (goal || '') + '" placeholder="Ex: 5000" onfocus="this.select()" onchange="updateGoal(this.value)">';
-  html += '</div>';
-  if (goal > 0) {
-    html += '<div class="savings-goal-bar"><div class="savings-goal-fill" style="width:' + goalPct + '%"></div></div>';
-    html += '<div class="savings-goal-pct">' + fmt(totalSav) + ' / ' + fmt(goal) + ' — ' + goalPct.toFixed(1) + '%</div>';
-  }
-  html += '</div></div>';
-
-  // Chart (bar chart via canvas)
-  html += '<div class="section">';
-  html += '<div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-chart-area"></i></span>Évolution cumulative</div></div>';
-  html += '<div class="savings-chart-container"><canvas class="savings-chart-canvas" id="savingsChart"></canvas></div>';
-  html += '</div>';
-
-  // Monthly distribution bars
-  html += '<div class="section">';
-  html += '<div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-chart-bar"></i></span>Épargne par mois</div></div>';
-  html += '<div class="annual-month-dist">';
-  for (var di = 0; di < 12; di++) {
-    var pct = maxSav > 0 ? (monthlySavings[di] / maxSav) * 100 : 0;
-    html += '<div class="dist-row">';
-    html += '<span class="dist-label">' + MONTHS_SHORT[di] + '</span>';
-    html += '<div class="dist-bar"><div class="dist-bar-fill savings-fill" style="width:' + pct + '%"></div></div>';
-    html += '<span class="dist-amount">' + fmt(monthlySavings[di]) + '</span>';
-    html += '</div>';
-  }
-  html += '</div></div>';
-
-  // Detailed table
-  html += '<div class="section">';
-  html += '<div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-list"></i></span>Détail mensuel</div>';
-  html += '<div class="section-total savings-total">' + fmt(totalSav) + '</div></div>';
-  html += '<div class="savings-table-header"><span></span><span>Mois</span><span style="text-align:right">Épargne</span><span style="text-align:right">Cumul</span></div>';
-  for (var ti = 0; ti < 12; ti++) {
-    var sVal = getMonthSavings(ti);
-    var cumul = getCumulativeSavings(ti);
-    var hasVal = sVal > 0 ? ' has-value' : '';
-    html += '<div class="savings-table-row' + hasVal + '">';
-    html += '<span class="month-label">' + (ti + 1) + '</span>';
-    html += '<span class="month-name">' + MONTHS[ti] + '</span>';
-    html += '<span class="sav-amount">' + (sVal > 0 ? fmt(sVal) : '—') + '</span>';
-    html += '<span class="sav-cumul">' + (cumul > 0 ? fmt(cumul) : '—') + '</span>';
-    html += '</div>';
-  }
-  html += '</div>';
-
-  document.getElementById('mainContent').innerHTML = html;
-
-  // Draw chart after DOM update
-  drawSavingsChart(monthlySavings, goal);
+function buildAnnualRow(idx,row,len){
+  var h='<div class="annual-row">'+moveBtns('annual',-1,idx,len);
+  h+='<div class="row-label"><input type="text" value="'+escapeAttr(row.label)+'" placeholder="Intitulé…" onchange="updateAnnualLabel('+idx+',this.value)"></div>';
+  h+='<div class="row-amount"><input type="number" inputmode="decimal" value="'+(row.amount||'')+'" placeholder="0" onfocus="this.select()" onchange="updateAnnualAmount('+idx+',this.value)"></div>';
+  h+='<div><select class="month-select" onchange="updateAnnualMonth('+idx+',this.value)">';
+  for(var sm=0;sm<12;sm++){h+='<option value="'+sm+'"'+(sm===row.month?' selected':'')+'>'+MONTHS_SHORT[sm]+'</option>'}
+  h+='</select></div><div class="row-delete"><button onclick="deleteAnnualExpense('+idx+')"><i class="fas fa-xmark"></i></button></div></div>';
+  return h;
 }
 
-function drawSavingsChart(monthlySavings, goal) {
-  var canvas = document.getElementById('savingsChart');
-  if (!canvas) return;
-  var ctx = canvas.getContext('2d');
-  var dpr = window.devicePixelRatio || 1;
-  var rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  ctx.scale(dpr, dpr);
-  var W = rect.width;
-  var H = rect.height;
-
-  var cumData = [];
-  var running = 0;
-  for (var i = 0; i < 12; i++) {
-    running += monthlySavings[i];
-    cumData.push(running);
-  }
-
-  var maxVal = Math.max.apply(null, cumData);
-  if (goal > 0 && goal > maxVal) maxVal = goal;
-  if (maxVal === 0) maxVal = 1;
-
-  var padL = 10, padR = 10, padT = 20, padB = 30;
-  var chartW = W - padL - padR;
-  var chartH = H - padT - padB;
-
-  var isDark = document.documentElement.classList.contains('dark');
-  var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-  var textColor = isDark ? '#6E6A62' : '#9E9E9E';
-  var savingsColor = isDark ? '#4EC4C4' : '#2E8B8B';
-  var fillColor = isDark ? 'rgba(78,196,196,0.15)' : 'rgba(46,139,139,0.1)';
-  var goalColor = isDark ? 'rgba(110,189,132,0.4)' : 'rgba(90,154,110,0.3)';
-
-  // Grid lines
-  ctx.strokeStyle = gridColor;
-  ctx.lineWidth = 1;
-  for (var g = 0; g <= 4; g++) {
-    var gy = padT + (chartH / 4) * g;
-    ctx.beginPath();
-    ctx.moveTo(padL, gy);
-    ctx.lineTo(W - padR, gy);
-    ctx.stroke();
-  }
-
-  // Goal line
-  if (goal > 0) {
-    var goalY = padT + chartH - (goal / maxVal) * chartH;
-    ctx.strokeStyle = goalColor;
-    ctx.lineWidth = 2;
-    ctx.setLineDash([6, 4]);
-    ctx.beginPath();
-    ctx.moveTo(padL, goalY);
-    ctx.lineTo(W - padR, goalY);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = goalColor;
-    ctx.font = '600 11px Nunito';
-    ctx.fillText('Objectif', W - padR - 52, goalY - 5);
-  }
-
-  // Area fill
-  ctx.beginPath();
-  for (var a = 0; a < 12; a++) {
-    var ax = padL + (a / 11) * chartW;
-    var ay = padT + chartH - (cumData[a] / maxVal) * chartH;
-    if (a === 0) ctx.moveTo(ax, ay);
-    else ctx.lineTo(ax, ay);
-  }
-  ctx.lineTo(padL + chartW, padT + chartH);
-  ctx.lineTo(padL, padT + chartH);
-  ctx.closePath();
-  ctx.fillStyle = fillColor;
-  ctx.fill();
-
-  // Line
-  ctx.beginPath();
-  ctx.strokeStyle = savingsColor;
-  ctx.lineWidth = 3;
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-  for (var l = 0; l < 12; l++) {
-    var lx = padL + (l / 11) * chartW;
-    var ly = padT + chartH - (cumData[l] / maxVal) * chartH;
-    if (l === 0) ctx.moveTo(lx, ly);
-    else ctx.lineTo(lx, ly);
-  }
-  ctx.stroke();
-
-  // Dots
-  for (var d = 0; d < 12; d++) {
-    var dx = padL + (d / 11) * chartW;
-    var dy = padT + chartH - (cumData[d] / maxVal) * chartH;
-    ctx.beginPath();
-    ctx.arc(dx, dy, cumData[d] > 0 ? 4 : 2, 0, Math.PI * 2);
-    ctx.fillStyle = cumData[d] > 0 ? savingsColor : gridColor;
-    ctx.fill();
-    if (cumData[d] > 0) {
-      ctx.strokeStyle = isDark ? '#2A2A32' : '#FFF';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-  }
-
-  // Month labels
-  ctx.fillStyle = textColor;
-  ctx.font = '700 10px Nunito';
-  ctx.textAlign = 'center';
-  for (var m = 0; m < 12; m++) {
-    var mx = padL + (m / 11) * chartW;
-    ctx.fillText(MONTHS_SHORT[m], mx, H - 8);
-  }
+// ===== SAVINGS PAGE =====
+function renderSavingsPage(){
+  var ts=gTSY(),goal=gSG(),avg=ts/12,gPct=goal>0?Math.min(100,(ts/goal)*100):0;
+  var mSav=[],mxS=0;for(var si=0;si<12;si++){var sv=gMS(si);mSav.push(sv);if(sv>mxS)mxS=sv}
+  var h='<div class="savings-summary">';
+  h+='<div class="summary-card savings-card"><div class="label">Total épargné</div><div class="value">'+fmt(ts)+'</div></div>';
+  h+='<div class="summary-card savings-card"><div class="label">Moyenne / mois</div><div class="value">'+fmt(avg)+'</div></div>';
+  h+='<div class="summary-card'+(goal>0?' savings-card':'')+'"><div class="label">Objectif</div><div class="value"'+(goal<=0?' style="color:var(--text-muted)"':'')+'>'+  (goal>0?fmt(goal):'Non défini')+'</div></div></div>';
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-bullseye"></i></span>Objectif annuel</div></div><div class="savings-goal-section"><div class="savings-goal-row"><label>Montant cible :</label><input type="number" inputmode="decimal" value="'+(goal||'')+'" placeholder="Ex: 5000" onfocus="this.select()" onchange="updateGoal(this.value)"></div>';
+  if(goal>0){h+='<div class="savings-goal-bar"><div class="savings-goal-fill" style="width:'+gPct+'%"></div></div><div class="savings-goal-pct">'+fmt(ts)+' / '+fmt(goal)+' — '+gPct.toFixed(1)+'%</div>'}
+  h+='</div></div>';
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-chart-area"></i></span>Évolution cumulative</div></div><div class="savings-chart-container"><canvas class="savings-chart-canvas" id="savingsChart"></canvas></div></div>';
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-chart-bar"></i></span>Épargne par mois</div></div><div class="annual-month-dist">';
+  for(var di=0;di<12;di++){var pct=mxS>0?(mSav[di]/mxS)*100:0;h+='<div class="dist-row"><span class="dist-label">'+MONTHS_SHORT[di]+'</span><div class="dist-bar"><div class="dist-bar-fill savings-fill" style="width:'+pct+'%"></div></div><span class="dist-amount">'+fmt(mSav[di])+'</span></div>'}
+  h+='</div></div>';
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-list"></i></span>Détail mensuel</div><div class="section-total savings-total">'+fmt(ts)+'</div></div>';
+  h+='<div class="savings-table-header"><span></span><span>Mois</span><span style="text-align:right">Épargne</span><span style="text-align:right">Cumul</span></div>';
+  for(var ti=0;ti<12;ti++){var sV=gMS(ti),cu=gCS(ti),hv=sV>0?' has-value':'';h+='<div class="savings-table-row'+hv+'"><span class="month-label">'+(ti+1)+'</span><span class="month-name">'+MONTHS[ti]+'</span><span class="sav-amount">'+(sV>0?fmt(sV):'—')+'</span><span class="sav-cumul">'+(cu>0?fmt(cu):'—')+'</span></div>'}
+  h+='</div>';
+  document.getElementById('mainContent').innerHTML=h;
+  drawSavingsChart(mSav,goal);
 }
 
-// ========== DATA OPERATIONS ==========
-function updateLabel(type, m, idx, val) {
-  getMonthData(m)[type][idx].label = val;
-  saveToStorage(); renderTabs();
+function drawSavingsChart(mSav,goal){
+  var canvas=document.getElementById('savingsChart');if(!canvas)return;
+  var ctx=canvas.getContext('2d'),dpr=window.devicePixelRatio||1,rect=canvas.getBoundingClientRect();
+  canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;ctx.scale(dpr,dpr);
+  var W=rect.width,H=rect.height,cumData=[],run=0;
+  for(var i=0;i<12;i++){run+=mSav[i];cumData.push(run)}
+  var maxV=Math.max.apply(null,cumData);if(goal>0&&goal>maxV)maxV=goal;if(maxV===0)maxV=1;
+  var pL=10,pR=10,pT=20,pB=30,cW=W-pL-pR,cH=H-pT-pB;
+  var dk=document.documentElement.classList.contains('dark');
+  var gc=dk?'rgba(255,255,255,.06)':'rgba(0,0,0,.06)',tc=dk?'#6E6A62':'#9E9E9E',sc=dk?'#4EC4C4':'#2E8B8B',fc=dk?'rgba(78,196,196,.15)':'rgba(46,139,139,.1)',glc=dk?'rgba(110,189,132,.4)':'rgba(90,154,110,.3)';
+  ctx.strokeStyle=gc;ctx.lineWidth=1;
+  for(var g=0;g<=4;g++){var gy=pT+(cH/4)*g;ctx.beginPath();ctx.moveTo(pL,gy);ctx.lineTo(W-pR,gy);ctx.stroke()}
+  if(goal>0){var gY=pT+cH-(goal/maxV)*cH;ctx.strokeStyle=glc;ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.beginPath();ctx.moveTo(pL,gY);ctx.lineTo(W-pR,gY);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=glc;ctx.font='600 11px Nunito';ctx.fillText('Objectif',W-pR-52,gY-5)}
+  ctx.beginPath();for(var a=0;a<12;a++){var ax=pL+(a/11)*cW,ay=pT+cH-(cumData[a]/maxV)*cH;if(a===0)ctx.moveTo(ax,ay);else ctx.lineTo(ax,ay)}
+  ctx.lineTo(pL+cW,pT+cH);ctx.lineTo(pL,pT+cH);ctx.closePath();ctx.fillStyle=fc;ctx.fill();
+  ctx.beginPath();ctx.strokeStyle=sc;ctx.lineWidth=3;ctx.lineJoin='round';ctx.lineCap='round';
+  for(var l=0;l<12;l++){var lx=pL+(l/11)*cW,ly=pT+cH-(cumData[l]/maxV)*cH;if(l===0)ctx.moveTo(lx,ly);else ctx.lineTo(lx,ly)}ctx.stroke();
+  for(var d=0;d<12;d++){var dx=pL+(d/11)*cW,dy=pT+cH-(cumData[d]/maxV)*cH;ctx.beginPath();ctx.arc(dx,dy,cumData[d]>0?4:2,0,Math.PI*2);ctx.fillStyle=cumData[d]>0?sc:gc;ctx.fill();if(cumData[d]>0){ctx.strokeStyle=dk?'#2A2A32':'#FFF';ctx.lineWidth=2;ctx.stroke()}}
+  ctx.fillStyle=tc;ctx.font='700 10px Nunito';ctx.textAlign='center';
+  for(var m=0;m<12;m++){ctx.fillText(MONTHS_SHORT[m],pL+(m/11)*cW,H-8)}
 }
-function updateAmount(type, m, idx, val) {
-  getMonthData(m)[type][idx].amount = parseFloat(val) || 0;
-  saveToStorage(); renderTabs(); renderContent();
+
+// ===== DATA OPS WITH SYNC =====
+function syncLabel(type,m,idx,val){
+  initYearData();var yd=data[getYearKey()];
+  for(var i=0;i<12;i++){if(yd.months[i][type]&&yd.months[i][type][idx])yd.months[i][type][idx].label=val}
+  saveToStorage();renderTabs();
 }
-function addRow(type, m) {
-  getMonthData(m)[type].push({ label: '', amount: 0 });
-  saveToStorage(); renderContent();
-  var rows = document.querySelectorAll('.section .budget-row .row-label input');
-  if (rows.length > 0) rows[rows.length - 1].focus();
+function syncAddRow(type,m){
+  initYearData();var yd=data[getYearKey()];
+  var isVar=type==='variableExpenses';
+  for(var i=0;i<12;i++){
+    if(isVar) yd.months[i][type].push({label:'',forecast:0,actual:0});
+    else yd.months[i][type].push({label:'',amount:0});
+  }
+  saveToStorage();renderContent();
+  var sel=isVar?'.var-row .row-label input':'.budget-row .row-label input';
+  var rows=document.querySelectorAll(sel);
+  if(rows.length>0)rows[rows.length-1].focus();
 }
-function deleteRow(type, m, idx) {
-  showConfirmDialog('Supprimer cette ligne ?', 'Cette action est irréversible.', function() {
-    getMonthData(m)[type].splice(idx, 1);
-    saveToStorage(); renderTabs(); renderContent();
+function syncDeleteRow(type,m,idx){
+  showConfirmDialog('Supprimer cette ligne ?','Elle sera supprimée de tous les mois.',function(){
+    initYearData();var yd=data[getYearKey()];
+    for(var i=0;i<12;i++){if(yd.months[i][type]&&yd.months[i][type].length>idx)yd.months[i][type].splice(idx,1)}
+    saveToStorage();renderTabs();renderContent();
   });
 }
-
-function updateSavings(m, val) {
-  getMonthData(m).savings = parseFloat(val) || 0;
-  saveToStorage(); renderTabs(); renderContent();
-}
-
-function updateGoal(val) {
-  setSavingsGoal(val);
-  saveToStorage(); renderContent();
-}
-
-function updateAnnualLabel(idx, val) {
-  getAnnualExpenses()[idx].label = val;
-  saveToStorage();
-}
-function updateAnnualAmount(idx, val) {
-  getAnnualExpenses()[idx].amount = parseFloat(val) || 0;
-  saveToStorage(); renderTabs(); renderContent();
-}
-function updateAnnualMonth(idx, val) {
-  getAnnualExpenses()[idx].month = parseInt(val, 10);
-  saveToStorage(); renderTabs(); renderContent();
-}
-function addAnnualExpense() {
-  getAnnualExpenses().push({ label: '', amount: 0, month: 0 });
-  saveToStorage(); renderContent();
-  var rows = document.querySelectorAll('.annual-row .row-label input');
-  if (rows.length > 0) rows[rows.length - 1].focus();
-}
-function deleteAnnualExpense(idx) {
-  showConfirmDialog('Supprimer cette dépense annuelle ?', 'Elle sera retirée du mois correspondant.', function() {
-    getAnnualExpenses().splice(idx, 1);
-    saveToStorage(); renderTabs(); renderContent();
-  });
-}
-
-// ========== YEAR ==========
-function changeYear(delta) {
-  currentYear += delta;
-  document.getElementById('yearDisplay').textContent = currentYear;
-  initYearData(); renderTabs(); renderContent();
-}
-
-// ========== EXPORT / IMPORT ==========
-function exportData() {
-  var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url; a.download = 'budget_' + currentYear + '.json';
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-  showToast('fa-check-circle', 'Données exportées');
-}
-function triggerImport() { document.getElementById('fileInput').click(); }
-function importData(event) {
-  var file = event.target.files[0];
-  if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      var imported = JSON.parse(e.target.result);
-      if (typeof imported === 'object' && imported !== null) {
-        data = imported;
-        var keys = Object.keys(data);
-        if (keys.length > 0) {
-          currentYear = parseInt(keys[0].substring(1), 10);
-          document.getElementById('yearDisplay').textContent = currentYear;
-        }
-        saveToStorage(); renderTabs(); renderContent();
-        showToast('fa-check-circle', 'Données importées avec succès');
-      }
-    } catch (err) {
-      showToast('fa-exclamation-triangle', 'Fichier invalide');
+function moveRow(type,m,idx,dir){
+  initYearData();var yd=data[getYearKey()];var newIdx=idx+dir;
+  if(type==='annual'){
+    var arr=yd.annualExpenses;if(newIdx<0||newIdx>=arr.length)return;
+    var tmp=arr[idx];arr[idx]=arr[newIdx];arr[newIdx]=tmp;
+  } else {
+    for(var i=0;i<12;i++){
+      var arr2=yd.months[i][type];
+      if(!arr2||newIdx<0||newIdx>=arr2.length)continue;
+      var t=arr2[idx];arr2[idx]=arr2[newIdx];arr2[newIdx]=t;
     }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
-}
-
-// ========== RESET ==========
-function showResetConfirm() {
-  showConfirmDialog(
-    'Réinitialiser toutes les données ?',
-    'Toutes les données de l\'année ' + currentYear + ' seront effacées. Cette action est irréversible.',
-    function() {
-      delete data[getYearKey()];
-      initYearData(); saveToStorage(); renderTabs(); renderContent();
-      showToast('fa-rotate-left', 'Données réinitialisées');
-    }
-  );
-}
-
-// ========== MODAL ==========
-function showConfirmDialog(title, message, onConfirm) {
-  var overlay = document.getElementById('modalOverlay');
-  var content = document.getElementById('modalContent');
-  content.innerHTML = '<h3>' + escapeHtml(title) + '</h3><p>' + escapeHtml(message) + '</p>' +
-    '<div class="modal-actions">' +
-    '<button class="modal-btn cancel" id="modalCancel">Annuler</button>' +
-    '<button class="modal-btn confirm" id="modalConfirm">Confirmer</button></div>';
-  overlay.classList.add('show');
-  document.getElementById('modalCancel').onclick = function() { overlay.classList.remove('show'); };
-  document.getElementById('modalConfirm').onclick = function() { overlay.classList.remove('show'); onConfirm(); };
-  overlay.onclick = function(e) { if (e.target === overlay) overlay.classList.remove('show'); };
-}
-
-// ========== TOAST ==========
-function showToast(icon, message) {
-  var toast = document.getElementById('toast');
-  toast.querySelector('.toast-icon').className = 'toast-icon fas ' + icon;
-  toast.querySelector('.toast-text').textContent = message;
-  toast.classList.add('show');
-  setTimeout(function() { toast.classList.remove('show'); }, 2500);
-}
-
-// ========== UTILS ==========
-function escapeHtml(str) {
-  var div = document.createElement('div');
-  div.appendChild(document.createTextNode(str));
-  return div.innerHTML;
-}
-function escapeAttr(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// ========== INIT ==========
-// Try to restore data from storage first
-var didLoad = loadFromStorage();
-if (didLoad) {
-  // Find most recent year in stored data
-  var storedKeys = Object.keys(data);
-  if (storedKeys.length > 0) {
-    var years = storedKeys.map(function(k) { return parseInt(k.substring(1), 10); }).sort();
-    currentYear = years[years.length - 1];
-    document.getElementById('yearDisplay').textContent = currentYear;
   }
+  saveToStorage();renderContent();
 }
-initYearData();
-renderTabs();
-renderContent();
+function updateAmount(type,m,idx,val){gM(m)[type][idx].amount=parseFloat(val)||0;saveToStorage();renderTabs();renderContent()}
+function updateVarAmount(m,idx,field,val){gM(m).variableExpenses[idx][field]=parseFloat(val)||0;saveToStorage();renderTabs();renderContent()}
+function updateSavings(m,val){gM(m).savings=parseFloat(val)||0;saveToStorage();renderTabs();renderContent()}
+function updateGoal(val){sSG(val);saveToStorage();renderContent()}
+function updateAnnualLabel(idx,val){gAE()[idx].label=val;saveToStorage()}
+function updateAnnualAmount(idx,val){gAE()[idx].amount=parseFloat(val)||0;saveToStorage();renderTabs();renderContent()}
+function updateAnnualMonth(idx,val){gAE()[idx].month=parseInt(val,10);saveToStorage();renderTabs();renderContent()}
+function addAnnualExpense(){gAE().push({label:'',amount:0,month:0});saveToStorage();renderContent();var r=document.querySelectorAll('.annual-row .row-label input');if(r.length>0)r[r.length-1].focus()}
+function deleteAnnualExpense(idx){showConfirmDialog('Supprimer cette dépense annuelle ?','Elle sera retirée du mois correspondant.',function(){gAE().splice(idx,1);saveToStorage();renderTabs();renderContent()})}
+
+// ===== YEAR =====
+function changeYear(d){currentYear+=d;document.getElementById('yearDisplay').textContent=currentYear;initYearData();renderTabs();renderContent()}
+
+// ===== EXPORT / IMPORT =====
+function exportData(){var b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='budget_'+currentYear+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);showToast('fa-check-circle','Données exportées')}
+function triggerImport(){document.getElementById('fileInput').click()}
+function importData(event){var f=event.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){try{var imp=JSON.parse(e.target.result);if(typeof imp==='object'&&imp!==null){data=imp;var k=Object.keys(data);if(k.length>0){currentYear=parseInt(k[0].substring(1),10);document.getElementById('yearDisplay').textContent=currentYear}saveToStorage();renderTabs();renderContent();showToast('fa-check-circle','Données importées')}}catch(err){showToast('fa-exclamation-triangle','Fichier invalide')}};r.readAsText(f);event.target.value=''}
+function showResetConfirm(){showConfirmDialog('Réinitialiser ?','Données de '+currentYear+' effacées.',function(){delete data[getYearKey()];initYearData();saveToStorage();renderTabs();renderContent();showToast('fa-rotate-left','Données réinitialisées')})}
+
+// ===== MODAL / TOAST =====
+function showConfirmDialog(title,msg,cb){var o=document.getElementById('modalOverlay'),c=document.getElementById('modalContent');c.innerHTML='<h3>'+escapeHtml(title)+'</h3><p>'+escapeHtml(msg)+'</p><div class="modal-actions"><button class="modal-btn cancel" id="mC">Annuler</button><button class="modal-btn confirm" id="mK">Confirmer</button></div>';o.classList.add('show');document.getElementById('mC').onclick=function(){o.classList.remove('show')};document.getElementById('mK').onclick=function(){o.classList.remove('show');cb()};o.onclick=function(e){if(e.target===o)o.classList.remove('show')}}
+function showToast(icon,msg){var t=document.getElementById('toast');t.querySelector('.toast-icon').className='toast-icon fas '+icon;t.querySelector('.toast-text').textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2500)}
+
+// ===== UTILS =====
+function escapeHtml(s){var d=document.createElement('div');d.appendChild(document.createTextNode(s));return d.innerHTML}
+function escapeAttr(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// ===== INIT =====
+var didLoad=loadFromStorage();
+if(didLoad){var sk=Object.keys(data);if(sk.length>0){var yrs=sk.map(function(k){return parseInt(k.substring(1),10)}).sort();currentYear=yrs[yrs.length-1];document.getElementById('yearDisplay').textContent=currentYear}}
+initYearData();renderTabs();renderContent();
 </script>
 </body>
 </html>
