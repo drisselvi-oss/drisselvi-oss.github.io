@@ -96,7 +96,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
 .provision-detail-label{display:flex;flex-direction:column;gap:1px}
 .provision-detail-label .prov-name{font-size:14px;font-weight:600;color:var(--text-primary)}
 .provision-detail-label .prov-meta{font-size:11px;color:var(--text-muted);font-weight:600}
-/* Variable row: move | label | forecast | actual | delete */
+/* Variable row */
 .var-row{display:grid;grid-template-columns:28px 1fr 100px 100px 32px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);transition:background .15s;gap:4px}
 .var-row:last-child{border-bottom:none}
 .var-row:hover{background:var(--input-bg)}
@@ -122,21 +122,47 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
 .row-delete button:hover{background:var(--red-bg);color:var(--red)}
 .add-row-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px;border:none;background:transparent;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--accent);cursor:pointer;transition:all .2s}
 .add-row-btn:hover{background:var(--accent-light)}
-/* Annual rows */
-.annual-row{display:grid;grid-template-columns:28px 1fr 130px 110px 32px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);transition:background .15s;gap:4px}
+/* Annual rows - 6 columns: move | label | compte | prevu | preleve | diff | month | delete */
+.annual-row{display:grid;grid-template-columns:28px 1fr 110px 95px 95px 80px 90px 32px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);transition:background .15s;gap:4px}
 .annual-row:last-child{border-bottom:none}
 .annual-row:hover{background:var(--input-bg)}
+.annual-col-headers{display:grid;grid-template-columns:28px 1fr 110px 95px 95px 80px 90px 32px;padding:4px 14px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted);gap:4px;border-bottom:1px solid var(--border)}
+.annual-col-headers span:nth-child(4),.annual-col-headers span:nth-child(5),.annual-col-headers span:nth-child(6){text-align:right}
 .month-select{padding:7px 8px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;color:var(--text-primary);outline:none;cursor:pointer;width:100%}
 .month-select:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-light)}
+.compte-select{padding:7px 6px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);font-family:'Nunito',sans-serif;font-size:12px;font-weight:600;color:var(--text-primary);outline:none;cursor:pointer;width:100%}
+.compte-select:focus{border-color:var(--savings);box-shadow:0 0 0 2px var(--savings-light)}
+.diff-value{font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;text-align:right;padding:7px 6px}
+.diff-value.positive{color:var(--green)}
+.diff-value.negative{color:var(--red)}
+.diff-value.zero{color:var(--text-muted)}
+.row-amount input.prevu-input:focus{box-shadow:0 0 0 2px var(--annual-badge)}
+.row-amount input.preleve-input{color:var(--text-primary)}
+.row-amount input.preleve-input:focus{box-shadow:0 0 0 2px var(--green)}
 /* Summaries */
 .annual-summary,.savings-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
 .annual-summary .summary-card .value{color:var(--annual-badge)}
 .savings-summary .summary-card .value{color:var(--savings)}
+/* Savings multi-line in month view */
+.savings-line-row{display:grid;grid-template-columns:28px 1fr 130px 32px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);transition:background .15s;gap:4px}
+.savings-line-row:last-child{border-bottom:none}
+.savings-line-row:hover{background:var(--input-bg)}
+.savings-line-row .row-label input{color:var(--savings);font-weight:700}
+.savings-line-row .row-amount input{color:var(--savings);font-weight:700}
+.savings-line-row .row-amount input:focus{box-shadow:0 0 0 2px var(--savings)}
+.add-savings-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px;border:none;background:transparent;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--savings);cursor:pointer;transition:all .2s}
+.add-savings-btn:hover{background:var(--savings-bg)}
+/* Savings account table */
+.account-table-header{display:grid;grid-template-columns:40px 1fr 110px 110px;padding:10px 18px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);border-bottom:2px solid var(--border)}
+.account-table-row{display:grid;grid-template-columns:40px 1fr 110px 110px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border);transition:background .15s}
+.account-table-row:last-child{border-bottom:none}
+.account-table-row:hover{background:var(--input-bg)}
+.account-table-row .acct-icon{width:32px;height:32px;border-radius:8px;background:var(--savings-bg);color:var(--savings);display:flex;align-items:center;justify-content:center;font-size:13px}
+.account-table-row .acct-name{font-size:14px;font-weight:700;color:var(--text-primary)}
+.account-table-row .acct-count{font-size:11px;color:var(--text-muted);font-weight:600}
+.account-table-row .acct-total{font-family:'DM Serif Display',serif;font-size:17px;color:var(--savings);text-align:right}
+.account-table-row .acct-annual-use{font-size:12px;font-weight:700;color:var(--annual-badge);text-align:right}
 /* Savings */
-.savings-inline{display:flex;align-items:center;justify-content:space-between;padding:14px 18px}
-.savings-inline-label{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--text-primary)}
-.savings-inline-input input{border:none;background:var(--savings-bg);border-radius:8px;padding:8px 14px;font-family:'Nunito',sans-serif;font-size:16px;font-weight:700;color:var(--savings);width:140px;text-align:right;outline:none;transition:all .2s}
-.savings-inline-input input:focus{background:var(--bg-secondary);box-shadow:0 0 0 2px var(--savings)}
 .savings-chart-container{padding:18px;position:relative}
 .savings-chart-canvas{width:100%;height:200px;display:block}
 .savings-goal-section{padding:16px 18px;border-top:1px solid var(--border)}
@@ -176,37 +202,75 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
 /* Modal & toast */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity .25s}
 .modal-overlay.show{opacity:1;pointer-events:all}
-.modal{background:var(--bg-card);border-radius:var(--radius);padding:24px;max-width:400px;width:90%;box-shadow:var(--shadow-lg);transform:translateY(20px);transition:transform .25s}
+.modal{background:var(--bg-card);border-radius:var(--radius);padding:24px;max-width:440px;width:90%;box-shadow:var(--shadow-lg);transform:translateY(20px);transition:transform .25s}
 .modal-overlay.show .modal{transform:translateY(0)}
 .modal h3{font-family:'DM Serif Display',serif;font-size:20px;margin-bottom:12px}
 .modal p{color:var(--text-secondary);font-size:14px;margin-bottom:20px;line-height:1.5}
-.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 .modal-btn{padding:10px 20px;border-radius:10px;border:none;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
 .modal-btn.cancel{background:var(--bg-primary);color:var(--text-secondary)}.modal-btn.cancel:hover{background:var(--border)}
 .modal-btn.confirm{background:var(--red);color:#FFF}.modal-btn.confirm:hover{opacity:.85}
+.modal-btn.primary{background:var(--accent);color:#FFF}.modal-btn.primary:hover{opacity:.85}
+.modal-btn.secondary{background:var(--blue);color:#FFF}.modal-btn.secondary:hover{opacity:.85}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:var(--shadow-lg);z-index:300;transition:transform .3s ease;display:flex;align-items:center;gap:8px}
 .toast.show{transform:translateX(-50%) translateY(0)}
-/* Double balance header */
-.dual-balance{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
-.dual-balance .bal-item{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)}
-.dual-balance .bal-val{font-family:'DM Serif Display',serif;font-size:17px}
-.bal-val.positive{color:var(--green)}.bal-val.negative{color:var(--red)}
+/* Dual balance in tabs */
+.tab-dual-balance{display:flex;flex-direction:column;gap:0;margin-top:2px}
+.tab-dual-balance .tab-bal-line{font-size:9px;font-weight:700;letter-spacing:.3px;line-height:1.2}
+.tab-dual-balance .tab-bal-line.positive{color:var(--green)}
+.tab-dual-balance .tab-bal-line.negative{color:var(--red)}
+.tab-btn.active .tab-dual-balance .tab-bal-line.positive,
+.tab-btn.active .tab-dual-balance .tab-bal-line.negative{color:rgba(255,255,255,.85)}
+/* Scope choice buttons in add-row area */
+.add-row-area{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 12px;flex-wrap:wrap}
+.add-row-area .add-row-btn{width:auto;padding:10px 16px;flex:0 0 auto}
+.add-row-area .add-row-btn.month-only{color:var(--blue);font-size:12px}
+.add-row-area .add-row-btn.month-only:hover{background:var(--blue-bg)}
+.add-row-area .add-row-btn.year-all{color:var(--accent);font-size:12px}
+.add-row-area .add-row-btn.year-all:hover{background:var(--accent-light)}
+/* Annual summary 5 cols */
+.annual-summary-5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
+.annual-summary-5 .summary-card .value{color:var(--annual-badge)}
+.annual-summary-5 .summary-card.balance .value.positive{color:var(--green)}
+.annual-summary-5 .summary-card.balance .value.negative{color:var(--red)}
+.annual-summary-5 .summary-card .value.diff-pos{color:var(--green)}
+.annual-summary-5 .summary-card .value.diff-neg{color:var(--red)}
 /* Responsive */
+@media(max-width:900px){
+  .annual-row{grid-template-columns:24px 1fr 90px 80px 80px 65px 75px 28px;padding:6px 8px;gap:3px}
+  .annual-col-headers{grid-template-columns:24px 1fr 90px 80px 80px 65px 75px 28px;padding:4px 8px;gap:3px}
+  .annual-summary-5{grid-template-columns:repeat(3,1fr)}
+}
 @media(max-width:600px){
   .summary-row{grid-template-columns:1fr 1fr}
   .annual-summary,.savings-summary{grid-template-columns:1fr}
+  .annual-summary-5{grid-template-columns:1fr 1fr}
   .budget-row{grid-template-columns:24px 1fr 100px 28px;padding:6px 10px}
   .var-row{grid-template-columns:24px 1fr 80px 80px 28px;padding:6px 10px}
   .var-col-headers{grid-template-columns:24px 1fr 80px 80px 28px;padding:4px 10px}
-  .annual-row{grid-template-columns:24px 1fr 100px 80px 28px;padding:6px 10px}
+  .annual-row{grid-template-columns:1fr;padding:10px 12px;gap:6px}
+  .annual-col-headers{display:none}
+  .annual-row .move-btns{display:none}
+  .annual-row .row-label{order:1}
+  .annual-row .row-amount{order:3}
+  .annual-row > div{min-width:0}
+  .annual-row-mobile-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+  .annual-row-mobile-meta{display:flex;gap:6px;flex-wrap:wrap}
+  .savings-line-row{grid-template-columns:24px 1fr 100px 28px;padding:6px 10px}
   .savings-table-header{grid-template-columns:40px 1fr 80px 90px;padding:8px 12px;font-size:10px}
   .savings-table-row{grid-template-columns:40px 1fr 80px 90px;padding:10px 12px}
+  .account-table-header{grid-template-columns:40px 1fr 90px 90px;padding:8px 12px;font-size:10px}
+  .account-table-row{grid-template-columns:40px 1fr 90px 90px;padding:10px 12px}
   .section-header{padding:12px 14px}
   .summary-card .value{font-size:17px}
   .tab-btn{padding:7px 10px;font-size:12px}
   .header-top{flex-wrap:wrap;gap:8px}
   .savings-inline{flex-wrap:wrap;gap:10px}
   .row-amount input{font-size:15px;padding:6px 8px}
+  .add-row-area{flex-direction:column}
+  .add-row-area .add-row-btn{width:100%}
+  .modal-actions{flex-direction:column}
+  .modal-actions .modal-btn{width:100%;text-align:center}
 }
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .section{animation:fadeIn .35s ease forwards}
@@ -246,7 +310,8 @@ var DEF_EXPENSES=[{label:'Loyer',amount:0},{label:'Courses',amount:0},{label:'É
 var DEF_VARIABLE=[{label:'Sorties / Restaurant',forecast:0,actual:0},{label:'Shopping',forecast:0,actual:0},{label:'Divers',forecast:0,actual:0}];
 
 var currentYear=new Date().getFullYear(), currentTab=0, data={};
-var STORAGE_KEY='monbudget_data', _store=(function(){try{var s=window['local'+'Storage'];s.setItem('__t','1');s.removeItem('__t');return s}catch(e){return null}})();
+var STORAGE_KEY='monbudget_data';
+var _store=(function(){try{var s=window.localStorage;s.setItem('__t','1');s.removeItem('__t');return s}catch(e){return null}})();
 function saveToStorage(){if(!_store)return;try{_store.setItem(STORAGE_KEY,JSON.stringify(data))}catch(e){}}
 function loadFromStorage(){if(!_store)return false;try{var s=_store.getItem(STORAGE_KEY);if(s){var p=JSON.parse(s);if(typeof p==='object'&&p!==null){data=p;return true}}}catch(e){}return false}
 function getYearKey(){return 'y'+currentYear}
@@ -259,15 +324,32 @@ function initYearData(){
       income:JSON.parse(JSON.stringify(DEF_INCOME)),
       expenses:JSON.parse(JSON.stringify(DEF_EXPENSES)),
       variableExpenses:JSON.parse(JSON.stringify(DEF_VARIABLE)),
-      savings:0
+      savingsLines:[]
     });
   }
   var yd=data[key];
   if(typeof yd.savingsGoal==='undefined') yd.savingsGoal=0;
   for(var j=0;j<12;j++){
     var md=yd.months[j];
-    if(typeof md.savings==='undefined') md.savings=0;
+    // Migration: old savings (number) -> savingsLines array
+    if(!md.savingsLines){
+      md.savingsLines=[];
+      if(typeof md.savings==='number' && md.savings>0){
+        md.savingsLines.push({label:'Épargne',amount:md.savings});
+      }
+      delete md.savings;
+    }
     if(!md.variableExpenses) md.variableExpenses=JSON.parse(JSON.stringify(DEF_VARIABLE));
+  }
+  // Migration: annual expenses old format (amount -> prevu/preleve)
+  for(var a=0;a<yd.annualExpenses.length;a++){
+    var ae=yd.annualExpenses[a];
+    if(typeof ae.prevu==='undefined'){
+      ae.prevu=parseFloat(ae.amount)||0;
+      ae.preleve=0;
+      delete ae.amount;
+    }
+    if(typeof ae.compte==='undefined') ae.compte='';
   }
 }
 
@@ -275,19 +357,29 @@ function gM(m){initYearData();return data[getYearKey()].months[m]}
 function gAE(){initYearData();return data[getYearKey()].annualExpenses}
 function gSG(){initYearData();return data[getYearKey()].savingsGoal||0}
 function sSG(v){initYearData();data[getYearKey()].savingsGoal=parseFloat(v)||0}
+
+// Annual expenses filtering — uses prevu for provisioning and month total
 function gAFM(mi){return gAE().filter(function(a){return a.month===mi})}
-function gATFM(mi){return gAFM(mi).reduce(function(s,a){return s+(parseFloat(a.amount)||0)},0)}
+function gATFM_prevu(mi){return gAFM(mi).reduce(function(s,a){return s+(parseFloat(a.prevu)||0)},0)}
+function gATFM_preleve(mi){return gAFM(mi).reduce(function(s,a){return s+(parseFloat(a.preleve)||0)},0)}
+
 function gTI(m){return gM(m).income.reduce(function(s,r){return s+(parseFloat(r.amount)||0)},0)}
 function gTE(m){return gM(m).expenses.reduce(function(s,r){return s+(parseFloat(r.amount)||0)},0)}
-function gMS(m){return parseFloat(gM(m).savings)||0}
+
+// Savings: sum all savingsLines
+function gMS(m){
+  var lines=gM(m).savingsLines;
+  var t=0;for(var i=0;i<lines.length;i++) t+=(parseFloat(lines[i].amount)||0);
+  return t;
+}
 function gVF(m){return gM(m).variableExpenses.reduce(function(s,r){return s+(parseFloat(r.forecast)||0)},0)}
 function gVA(m){return gM(m).variableExpenses.reduce(function(s,r){return s+(parseFloat(r.actual)||0)},0)}
 
-// Provision
+// Provision — uses prevu
 function gAPFM(mi){
   var annuals=gAE(),total=0,details=[];
   for(var i=0;i<annuals.length;i++){
-    var a=annuals[i],dm=a.month,amt=parseFloat(a.amount)||0;
+    var a=annuals[i],dm=a.month,amt=parseFloat(a.prevu)||0;
     if(amt<=0||dm===0)continue;
     if(mi<dm){var ms=dm,mc=amt/ms;total+=mc;details.push({label:a.label||'Dépense annuelle',monthlyAmount:mc,fullAmount:amt,dueMonth:dm,monthsToSave:ms})}
   }
@@ -295,12 +387,52 @@ function gAPFM(mi){
 }
 function gPTFM(mi){return gAPFM(mi).total}
 
-// Balances
-function balForecast(m){return gTI(m)-gTE(m)-gATFM(m)-gMS(m)-gPTFM(m)-gVF(m)}
-function balActual(m){return gTI(m)-gTE(m)-gATFM(m)-gMS(m)-gPTFM(m)-gVA(m)}
+// Balances — forecast uses prevu, actual uses preleve
+function balForecast(m){return gTI(m)-gTE(m)-gATFM_prevu(m)-gMS(m)-gPTFM(m)-gVF(m)}
+function balActual(m){return gTI(m)-gTE(m)-gATFM_preleve(m)-gMS(m)-gPTFM(m)-gVA(m)}
 function gTSY(){var t=0;for(var i=0;i<12;i++)t+=gMS(i);return t}
 function gCS(u){var t=0;for(var i=0;i<=u;i++)t+=gMS(i);return t}
 function fmt(n){return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(n)}
+
+// Get all savings account names across the year
+function getAllSavingsAccountNames(){
+  initYearData();
+  var yd=data[getYearKey()],names={};
+  for(var m=0;m<12;m++){
+    var lines=yd.months[m].savingsLines;
+    for(var i=0;i<lines.length;i++){
+      var lbl=(lines[i].label||'').trim();
+      if(lbl) names[lbl]=true;
+    }
+  }
+  return Object.keys(names).sort();
+}
+
+// Get per-account totals
+function getSavingsAccountTotals(){
+  initYearData();
+  var yd=data[getYearKey()],accounts={};
+  for(var m=0;m<12;m++){
+    var lines=yd.months[m].savingsLines;
+    for(var i=0;i<lines.length;i++){
+      var lbl=(lines[i].label||'').trim();
+      if(!lbl) continue;
+      if(!accounts[lbl]) accounts[lbl]={total:0,months:0};
+      var amt=parseFloat(lines[i].amount)||0;
+      if(amt!==0){accounts[lbl].total+=amt;accounts[lbl].months++}
+    }
+  }
+  return accounts;
+}
+
+// Get how much annual expenses are linked to a given account
+function getAnnualUseForAccount(accountName){
+  var annuals=gAE(),total=0;
+  for(var i=0;i<annuals.length;i++){
+    if((annuals[i].compte||'')=== accountName) total+=(parseFloat(annuals[i].prevu)||0);
+  }
+  return total;
+}
 
 // Dark mode
 if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.classList.add('dark');
@@ -310,8 +442,13 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',func
 function renderTabs(){
   var c=document.getElementById('tabsContainer'),h='';
   for(var i=0;i<12;i++){
-    var bf=balForecast(i),cls=bf>=0?'positive':'negative',act=currentTab===i?' active':'';
-    h+='<button class="tab-btn'+act+'" onclick="switchTab('+i+')">'+MONTHS_SHORT[i]+'<span class="tab-balance '+cls+'">'+fmt(bf)+'</span></button>';
+    var ba=balActual(i);
+    var clsA=ba>=0?'positive':'negative';
+    var act=currentTab===i?' active':'';
+    h+='<button class="tab-btn'+act+'" onclick="switchTab('+i+')">'+MONTHS_SHORT[i];
+    h+='<div class="tab-dual-balance">';
+    h+='<span class="tab-bal-line '+clsA+'">'+fmt(ba)+'</span>';
+    h+='</div></button>';
   }
   h+='<button class="tab-btn annual-tab'+(currentTab===12?' active':'')+'" onclick="switchTab(12)"><i class="fas fa-calendar-alt"></i> Annuelles</button>';
   h+='<button class="tab-btn savings-tab'+(currentTab===13?' active':'')+'" onclick="switchTab(13)"><i class="fas fa-piggy-bank"></i> Épargne';
@@ -336,15 +473,15 @@ function moveBtns(type,m,idx,len){
 }
 
 function renderMonthPage(m){
-  var md=gM(m),ti=gTI(m),te=gTE(m),at=gATFM(m),sv=gMS(m),prov=gAPFM(m),pt=prov.total;
+  var md=gM(m),ti=gTI(m),te=gTE(m),at_prevu=gATFM_prevu(m),at_preleve=gATFM_preleve(m),sv=gMS(m),prov=gAPFM(m),pt=prov.total;
   var vf=gVF(m),va=gVA(m);
-  var bf=ti-te-at-sv-pt-vf, ba=ti-te-at-sv-pt-va;
-  var totalOutF=te+at+pt+vf, totalOutA=te+at+pt+va;
+  var bf=ti-te-at_prevu-sv-pt-vf, ba=ti-te-at_preleve-sv-pt-va;
+  var totalExpensesHeader=te+va;
   var h='';
   // Summary
   h+='<div class="summary-row">';
   h+='<div class="summary-card income"><div class="label">Revenus</div><div class="value">'+fmt(ti)+'</div></div>';
-  h+='<div class="summary-card expense"><div class="label">Dépenses</div><div class="value">'+fmt(totalOutF)+'</div></div>';
+  h+='<div class="summary-card expense"><div class="label">Dépenses</div><div class="value">'+fmt(totalExpensesHeader)+'</div></div>';
   h+='<div class="summary-card balance"><div class="label">Solde prévisionnel</div><div class="value '+(bf>=0?'positive':'negative')+'">'+fmt(bf)+'</div>';
   var ratioF=ti>0?Math.min(100,Math.max(0,(bf/ti)*100)):0;
   h+='<div class="balance-bar"><div class="balance-bar-fill '+(bf>=0?'positive':'negative')+'" style="width:'+Math.abs(ratioF)+'%"></div></div></div>';
@@ -356,12 +493,14 @@ function renderMonthPage(m){
   // Income
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon income-icon"><i class="fas fa-arrow-down"></i></span>Revenus</div><div class="section-total income-total">'+fmt(ti)+'</div></div>';
   for(var i=0;i<md.income.length;i++) h+=buildRow('income',m,i,md.income[i],md.income.length);
-  h+='<button class="add-row-btn" onclick="syncAddRow(\'income\','+m+')"><i class="fas fa-plus"></i> Ajouter un revenu</button></div>';
+  h+=buildAddArea('income',m);
+  h+='</div>';
 
   // Fixed expenses
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon expense-icon"><i class="fas fa-arrow-up"></i></span>Dépenses fixes</div><div class="section-total expense-total">'+fmt(te)+'</div></div>';
   for(var j=0;j<md.expenses.length;j++) h+=buildRow('expenses',m,j,md.expenses[j],md.expenses.length);
-  h+='<button class="add-row-btn" onclick="syncAddRow(\'expenses\','+m+')"><i class="fas fa-plus"></i> Ajouter une dépense fixe</button></div>';
+  h+=buildAddArea('expenses',m);
+  h+='</div>';
 
   // Variable expenses
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon variable-icon"><i class="fas fa-shuffle"></i></span>Dépenses variables</div>';
@@ -369,7 +508,8 @@ function renderMonthPage(m){
   h+='<div style="font-size:11px;font-weight:700;color:var(--text-muted)">Réel: <span style="color:var(--text-primary)">'+fmt(va)+'</span></div></div></div>';
   h+='<div class="var-col-headers"><span></span><span>Intitulé</span><span style="text-align:right">Prévu</span><span style="text-align:right">Réel</span><span></span></div>';
   for(var v=0;v<md.variableExpenses.length;v++) h+=buildVarRow(m,v,md.variableExpenses[v],md.variableExpenses.length);
-  h+='<button class="add-row-btn" onclick="syncAddRow(\'variableExpenses\','+m+')"><i class="fas fa-plus"></i> Ajouter une dépense variable</button></div>';
+  h+=buildAddArea('variableExpenses',m);
+  h+='</div>';
 
   // Provision
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon provision-icon"><i class="fas fa-vault"></i></span>Épargne dép. annuelles<span class="provision-badge">AUTO</span></div><div class="section-total provision-total">'+fmt(pt)+'</div></div>';
@@ -379,61 +519,126 @@ function renderMonthPage(m){
 
   // Annual due this month
   var annuals=gAFM(m);
-  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon annual-icon"><i class="fas fa-calendar-check"></i></span>Sorties annuelles<span class="auto-badge">AUTO</span></div><div class="section-total annual-total">'+fmt(at)+'</div></div>';
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon annual-icon"><i class="fas fa-calendar-check"></i></span>Sorties annuelles<span class="auto-badge">AUTO</span></div><div class="section-total annual-total">'+fmt(at_prevu)+'</div></div>';
   if(annuals.length===0){h+='<div class="empty-state"><i class="fas fa-calendar-xmark"></i><p>Aucune sortie annuelle ce mois.</p></div>';}
-  else{for(var k=0;k<annuals.length;k++){h+='<div class="budget-row auto-row"><div class="row-label">'+escapeHtml(annuals[k].label)+'</div><div class="row-amount"><div class="auto-value">'+fmt(annuals[k].amount)+'</div></div><div class="row-delete"></div></div>';}}
+  else{for(var k=0;k<annuals.length;k++){
+    var ae=annuals[k],diff=((parseFloat(ae.prevu)||0)-(parseFloat(ae.preleve)||0));
+    var diffCls=diff>0?'positive':(diff<0?'negative':'zero');
+    h+='<div class="budget-row auto-row" style="grid-template-columns:1fr 90px 90px 70px">';
+    h+='<div class="row-label">'+escapeHtml(ae.label)+(ae.compte?' <small style="color:var(--savings);font-weight:800">'+escapeHtml(ae.compte)+'</small>':'')+'</div>';
+    h+='<div class="row-amount"><div class="auto-value" style="font-size:13px">'+fmt(ae.prevu)+'</div></div>';
+    h+='<div class="row-amount"><div class="auto-value" style="font-size:13px;color:var(--text-primary)">'+fmt(ae.preleve)+'</div></div>';
+    h+='<div class="diff-value '+diffCls+'">'+fmt(diff)+'</div>';
+    h+='</div>';
+  }}
   h+='</div>';
 
-  // Savings
+  // Savings multi-line
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-piggy-bank"></i></span>Épargne du mois</div><div class="section-total savings-total">'+fmt(sv)+'</div></div>';
-  h+='<div class="savings-inline"><div class="savings-inline-label"><i class="fas fa-coins" style="color:var(--savings)"></i> Montant</div>';
-  h+='<div class="savings-inline-input"><input type="number" inputmode="decimal" value="'+(sv||'')+'" placeholder="0" onfocus="this.select()" onchange="updateSavings('+m+',this.value)"></div></div></div>';
+  if(md.savingsLines.length===0){
+    h+='<div class="empty-state"><i class="fas fa-coins"></i><p>Aucune ligne d\'épargne ce mois.</p></div>';
+  } else {
+    for(var sl=0;sl<md.savingsLines.length;sl++){
+      var line=md.savingsLines[sl];
+      h+='<div class="savings-line-row">';
+      h+=moveBtns('savingsLines',m,sl,md.savingsLines.length);
+      h+='<div class="row-label"><input type="text" value="'+escapeAttr(line.label)+'" placeholder="Nom du compte…" onchange="updateSavingsLineLabel('+m+','+sl+',this.value)"></div>';
+      h+='<div class="row-amount"><input type="number" inputmode="decimal" value="'+(line.amount||'')+'" placeholder="0" onfocus="this.select()" onchange="updateSavingsLineAmount('+m+','+sl+',this.value)"></div>';
+      h+='<div class="row-delete"><button onclick="deleteSavingsLine('+m+','+sl+')"><i class="fas fa-xmark"></i></button></div></div>';
+    }
+  }
+  h+='<button class="add-savings-btn" onclick="addSavingsLine('+m+')"><i class="fas fa-plus"></i> Ajouter une ligne d\'épargne</button>';
+  h+='</div>';
 
   document.getElementById('mainContent').innerHTML=h;
 }
 
 function buildRow(type,m,idx,row,len){
   var h='<div class="budget-row">'+moveBtns(type,m,idx,len);
-  h+='<div class="row-label"><input type="text" value="'+escapeAttr(row.label)+'" placeholder="Intitulé…" onchange="syncLabel(\''+type+'\','+m+','+idx+',this.value)"></div>';
+  h+='<div class="row-label"><input type="text" value="'+escapeAttr(row.label)+'" placeholder="Intitulé…" onchange="handleLabelChange(\''+type+'\','+m+','+idx+',this.value)"></div>';
   h+='<div class="row-amount"><input type="number" inputmode="decimal" value="'+(row.amount||'')+'" placeholder="0" onfocus="this.select()" onchange="updateAmount(\''+type+'\','+m+','+idx+',this.value)"></div>';
-  h+='<div class="row-delete"><button onclick="syncDeleteRow(\''+type+'\','+m+','+idx+')"><i class="fas fa-xmark"></i></button></div></div>';
+  h+='<div class="row-delete"><button onclick="handleDeleteRow(\''+type+'\','+m+','+idx+')"><i class="fas fa-xmark"></i></button></div></div>';
   return h;
 }
 
 function buildVarRow(m,idx,row,len){
   var h='<div class="var-row">'+moveBtns('variableExpenses',m,idx,len);
-  h+='<div class="row-label"><input type="text" value="'+escapeAttr(row.label)+'" placeholder="Intitulé…" onchange="syncLabel(\'variableExpenses\','+m+','+idx+',this.value)"></div>';
+  h+='<div class="row-label"><input type="text" value="'+escapeAttr(row.label)+'" placeholder="Intitulé…" onchange="handleLabelChange(\'variableExpenses\','+m+','+idx+',this.value)"></div>';
   h+='<div class="row-amount"><input type="number" inputmode="decimal" class="forecast-input" value="'+(row.forecast||'')+'" placeholder="0" onfocus="this.select()" onchange="updateVarAmount('+m+','+idx+',\'forecast\',this.value)"></div>';
   h+='<div class="row-amount"><input type="number" inputmode="decimal" class="actual-input" value="'+(row.actual||'')+'" placeholder="0" onfocus="this.select()" onchange="updateVarAmount('+m+','+idx+',\'actual\',this.value)"></div>';
-  h+='<div class="row-delete"><button onclick="syncDeleteRow(\'variableExpenses\','+m+','+idx+')"><i class="fas fa-xmark"></i></button></div></div>';
+  h+='<div class="row-delete"><button onclick="handleDeleteRow(\'variableExpenses\','+m+','+idx+')"><i class="fas fa-xmark"></i></button></div></div>';
+  return h;
+}
+
+function buildAddArea(type,m){
+  var labelType='';
+  if(type==='income') labelType='un revenu';
+  else if(type==='expenses') labelType='une dépense fixe';
+  else labelType='une dépense variable';
+  var h='<div class="add-row-area">';
+  h+='<button class="add-row-btn year-all" onclick="addRowYear(\''+type+'\','+m+')"><i class="fas fa-plus"></i> Ajouter '+labelType+' <small>(toute l\'année)</small></button>';
+  h+='<button class="add-row-btn month-only" onclick="addRowMonth(\''+type+'\','+m+')"><i class="fas fa-plus-circle"></i> Ajouter '+labelType+' <small>('+MONTHS_SHORT[m]+' seul)</small></button>';
+  h+='</div>';
   return h;
 }
 
 // ===== ANNUAL PAGE =====
 function renderAnnualPage(){
-  var annuals=gAE(),ta=annuals.reduce(function(s,a){return s+(parseFloat(a.amount)||0)},0),avg=ta/12;
+  var annuals=gAE();
+  var tPrevu=annuals.reduce(function(s,a){return s+(parseFloat(a.prevu)||0)},0);
+  var tPreleve=annuals.reduce(function(s,a){return s+(parseFloat(a.preleve)||0)},0);
+  var tDiff=tPrevu-tPreleve;
+  var avgP=tPrevu/12;
   var perMonth=[],mx=0;
-  for(var mi=0;mi<12;mi++){var t=gATFM(mi);perMonth.push(t);if(t>mx)mx=t}
+  for(var mi=0;mi<12;mi++){var t=gATFM_prevu(mi);perMonth.push(t);if(t>mx)mx=t}
   var tiy=0,tey=0;for(var yi=0;yi<12;yi++){tiy+=gTI(yi);tey+=gTE(yi)}
-  var yb=tiy-tey-ta-gTSY();
-  var h='<div class="annual-summary">';
-  h+='<div class="summary-card"><div class="label">Total annuel</div><div class="value" style="color:var(--annual-badge)">'+fmt(ta)+'</div></div>';
-  h+='<div class="summary-card"><div class="label">Moyenne / mois</div><div class="value" style="color:var(--annual-badge)">'+fmt(avg)+'</div></div>';
+  var yb=tiy-tey-tPrevu-gTSY();
+  var diffCls=tDiff>0?'diff-pos':(tDiff<0?'diff-neg':'');
+
+  var h='<div class="annual-summary-5">';
+  h+='<div class="summary-card"><div class="label">Total prévu</div><div class="value" style="color:var(--annual-badge)">'+fmt(tPrevu)+'</div></div>';
+  h+='<div class="summary-card"><div class="label">Total prélevé</div><div class="value" style="color:var(--text-primary)">'+fmt(tPreleve)+'</div></div>';
+  h+='<div class="summary-card"><div class="label">Différence</div><div class="value '+diffCls+'">'+fmt(tDiff)+'</div></div>';
+  h+='<div class="summary-card"><div class="label">Moyenne / mois</div><div class="value" style="color:var(--annual-badge)">'+fmt(avgP)+'</div></div>';
   h+='<div class="summary-card balance"><div class="label">Bilan année</div><div class="value '+(yb>=0?'positive':'negative')+'">'+fmt(yb)+'</div></div></div>';
+
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon annual-icon"><i class="fas fa-chart-bar"></i></span>Répartition mensuelle</div></div><div class="annual-month-dist">';
   for(var di=0;di<12;di++){var pct=mx>0?(perMonth[di]/mx)*100:0;h+='<div class="dist-row"><span class="dist-label">'+MONTHS_SHORT[di]+'</span><div class="dist-bar"><div class="dist-bar-fill" style="width:'+pct+'%"></div></div><span class="dist-amount">'+fmt(perMonth[di])+'</span></div>';}
   h+='</div></div>';
-  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon annual-icon"><i class="fas fa-calendar-alt"></i></span>Dépenses annuelles</div><div class="section-total annual-total">'+fmt(ta)+'</div></div>';
+
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon annual-icon"><i class="fas fa-calendar-alt"></i></span>Dépenses annuelles</div><div class="section-total annual-total">'+fmt(tPrevu)+'</div></div>';
   if(annuals.length===0){h+='<div class="empty-state"><i class="fas fa-calendar-plus"></i><p>Aucune dépense annuelle.</p></div>';}
-  else{for(var ai=0;ai<annuals.length;ai++)h+=buildAnnualRow(ai,annuals[ai],annuals.length)}
+  else{
+    h+='<div class="annual-col-headers"><span></span><span>Intitulé</span><span>Compte</span><span style="text-align:right">Prévu</span><span style="text-align:right">Prélevé</span><span style="text-align:right">Diff.</span><span>Mois</span><span></span></div>';
+    for(var ai=0;ai<annuals.length;ai++)h+=buildAnnualRow(ai,annuals[ai],annuals.length);
+  }
   h+='<button class="add-row-btn" onclick="addAnnualExpense()"><i class="fas fa-plus"></i> Ajouter une dépense annuelle</button></div>';
   document.getElementById('mainContent').innerHTML=h;
 }
 
 function buildAnnualRow(idx,row,len){
+  var accounts=getAllSavingsAccountNames();
+  var prevu=parseFloat(row.prevu)||0;
+  var preleve=parseFloat(row.preleve)||0;
+  var diff=prevu-preleve;
+  var diffCls=diff>0?'positive':(diff<0?'negative':'zero');
+
   var h='<div class="annual-row">'+moveBtns('annual',-1,idx,len);
   h+='<div class="row-label"><input type="text" value="'+escapeAttr(row.label)+'" placeholder="Intitulé…" onchange="updateAnnualLabel('+idx+',this.value)"></div>';
-  h+='<div class="row-amount"><input type="number" inputmode="decimal" value="'+(row.amount||'')+'" placeholder="0" onfocus="this.select()" onchange="updateAnnualAmount('+idx+',this.value)"></div>';
+  // Compte select
+  h+='<div><select class="compte-select" onchange="updateAnnualCompte('+idx+',this.value)">';
+  h+='<option value=""'+((!row.compte)?' selected':'')+'>— Aucun —</option>';
+  for(var c=0;c<accounts.length;c++){
+    h+='<option value="'+escapeAttr(accounts[c])+'"'+(accounts[c]===row.compte?' selected':'')+'>'+escapeHtml(accounts[c])+'</option>';
+  }
+  h+='</select></div>';
+  // Prevu
+  h+='<div class="row-amount"><input type="number" inputmode="decimal" class="prevu-input" value="'+(prevu||'')+'" placeholder="0" onfocus="this.select()" onchange="updateAnnualPrevu('+idx+',this.value)"></div>';
+  // Preleve
+  h+='<div class="row-amount"><input type="number" inputmode="decimal" class="preleve-input" value="'+(preleve||'')+'" placeholder="0" onfocus="this.select()" onchange="updateAnnualPreleve('+idx+',this.value)"></div>';
+  // Diff
+  h+='<div class="diff-value '+diffCls+'">'+fmt(diff)+'</div>';
+  // Month
   h+='<div><select class="month-select" onchange="updateAnnualMonth('+idx+',this.value)">';
   for(var sm=0;sm<12;sm++){h+='<option value="'+sm+'"'+(sm===row.month?' selected':'')+'>'+MONTHS_SHORT[sm]+'</option>'}
   h+='</select></div><div class="row-delete"><button onclick="deleteAnnualExpense('+idx+')"><i class="fas fa-xmark"></i></button></div></div>';
@@ -448,16 +653,39 @@ function renderSavingsPage(){
   h+='<div class="summary-card savings-card"><div class="label">Total épargné</div><div class="value">'+fmt(ts)+'</div></div>';
   h+='<div class="summary-card savings-card"><div class="label">Moyenne / mois</div><div class="value">'+fmt(avg)+'</div></div>';
   h+='<div class="summary-card'+(goal>0?' savings-card':'')+'"><div class="label">Objectif</div><div class="value"'+(goal<=0?' style="color:var(--text-muted)"':'')+'>'+  (goal>0?fmt(goal):'Non défini')+'</div></div></div>';
+
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-bullseye"></i></span>Objectif annuel</div></div><div class="savings-goal-section"><div class="savings-goal-row"><label>Montant cible :</label><input type="number" inputmode="decimal" value="'+(goal||'')+'" placeholder="Ex: 5000" onfocus="this.select()" onchange="updateGoal(this.value)"></div>';
   if(goal>0){h+='<div class="savings-goal-bar"><div class="savings-goal-fill" style="width:'+gPct+'%"></div></div><div class="savings-goal-pct">'+fmt(ts)+' / '+fmt(goal)+' — '+gPct.toFixed(1)+'%</div>'}
   h+='</div></div>';
+
+  // Per-account totals
+  var accountTotals=getSavingsAccountTotals();
+  var accountNames=Object.keys(accountTotals).sort();
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-landmark"></i></span>Comptes d\'épargne</div><div class="section-total savings-total">'+fmt(ts)+'</div></div>';
+  if(accountNames.length===0){
+    h+='<div class="empty-state"><i class="fas fa-piggy-bank"></i><p>Ajoutez des lignes d\'épargne dans les mois pour voir vos comptes ici.</p></div>';
+  } else {
+    h+='<div class="account-table-header"><span></span><span>Compte</span><span style="text-align:right">Total</span><span style="text-align:right">Dép. liées</span></div>';
+    for(var an=0;an<accountNames.length;an++){
+      var name=accountNames[an],acct=accountTotals[name];
+      var annualUse=getAnnualUseForAccount(name);
+      h+='<div class="account-table-row">';
+      h+='<div class="acct-icon"><i class="fas fa-landmark"></i></div>';
+      h+='<div><div class="acct-name">'+escapeHtml(name)+'</div><div class="acct-count">'+acct.months+' mois alimenté'+(acct.months>1?'s':'')+'</div></div>';
+      h+='<div class="acct-total">'+fmt(acct.total)+'</div>';
+      h+='<div class="acct-annual-use">'+(annualUse>0?fmt(annualUse):'—')+'</div>';
+      h+='</div>';
+    }
+  }
+  h+='</div>';
+
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-chart-area"></i></span>Évolution cumulative</div></div><div class="savings-chart-container"><canvas class="savings-chart-canvas" id="savingsChart"></canvas></div></div>';
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-chart-bar"></i></span>Épargne par mois</div></div><div class="annual-month-dist">';
   for(var di=0;di<12;di++){var pct=mxS>0?(mSav[di]/mxS)*100:0;h+='<div class="dist-row"><span class="dist-label">'+MONTHS_SHORT[di]+'</span><div class="dist-bar"><div class="dist-bar-fill savings-fill" style="width:'+pct+'%"></div></div><span class="dist-amount">'+fmt(mSav[di])+'</span></div>'}
   h+='</div></div>';
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-list"></i></span>Détail mensuel</div><div class="section-total savings-total">'+fmt(ts)+'</div></div>';
   h+='<div class="savings-table-header"><span></span><span>Mois</span><span style="text-align:right">Épargne</span><span style="text-align:right">Cumul</span></div>';
-  for(var ti=0;ti<12;ti++){var sV=gMS(ti),cu=gCS(ti),hv=sV>0?' has-value':'';h+='<div class="savings-table-row'+hv+'"><span class="month-label">'+(ti+1)+'</span><span class="month-name">'+MONTHS[ti]+'</span><span class="sav-amount">'+(sV>0?fmt(sV):'—')+'</span><span class="sav-cumul">'+(cu>0?fmt(cu):'—')+'</span></div>'}
+  for(var ti2=0;ti2<12;ti2++){var sV=gMS(ti2),cu=gCS(ti2),hv=sV>0?' has-value':'';h+='<div class="savings-table-row'+hv+'"><span class="month-label">'+(ti2+1)+'</span><span class="month-name">'+MONTHS[ti2]+'</span><span class="sav-amount">'+(sV>0?fmt(sV):'—')+'</span><span class="sav-cumul">'+(cu>0?fmt(cu):'—')+'</span></div>'}
   h+='</div>';
   document.getElementById('mainContent').innerHTML=h;
   drawSavingsChart(mSav,goal);
@@ -485,13 +713,30 @@ function drawSavingsChart(mSav,goal){
   for(var m=0;m<12;m++){ctx.fillText(MONTHS_SHORT[m],pL+(m/11)*cW,H-8)}
 }
 
-// ===== DATA OPS WITH SYNC =====
-function syncLabel(type,m,idx,val){
-  initYearData();var yd=data[getYearKey()];
-  for(var i=0;i<12;i++){if(yd.months[i][type]&&yd.months[i][type][idx])yd.months[i][type][idx].label=val}
-  saveToStorage();renderTabs();
+// ===== LABEL CHANGE WITH SCOPE CHOICE =====
+function handleLabelChange(type,m,idx,newVal){
+  showScopeDialog(
+    'Renommer l\'intitulé',
+    'Appliquer le nouveau nom « '+escapeHtml(newVal)+' » à :',
+    function(){
+      initYearData();var yd=data[getYearKey()];
+      for(var i=0;i<12;i++){if(yd.months[i][type]&&yd.months[i][type][idx])yd.months[i][type][idx].label=newVal}
+      saveToStorage();renderTabs();renderContent();
+      showToast('fa-check-circle','Intitulé renommé (toute l\'année)');
+    },
+    function(){
+      initYearData();
+      var arr=data[getYearKey()].months[m][type];
+      if(arr&&arr[idx]) arr[idx].label=newVal;
+      saveToStorage();renderTabs();renderContent();
+      showToast('fa-check-circle','Intitulé renommé ('+MONTHS[m]+' seul)');
+    },
+    m
+  );
 }
-function syncAddRow(type,m){
+
+// ===== ADD ROW =====
+function addRowYear(type,m){
   initYearData();var yd=data[getYearKey()];
   var isVar=type==='variableExpenses';
   for(var i=0;i<12;i++){
@@ -499,22 +744,56 @@ function syncAddRow(type,m){
     else yd.months[i][type].push({label:'',amount:0});
   }
   saveToStorage();renderContent();
+  focusLastInput(isVar);
+  showToast('fa-plus-circle','Ligne ajoutée (toute l\'année)');
+}
+
+function addRowMonth(type,m){
+  initYearData();var yd=data[getYearKey()];
+  var isVar=type==='variableExpenses';
+  if(isVar) yd.months[m][type].push({label:'',forecast:0,actual:0});
+  else yd.months[m][type].push({label:'',amount:0});
+  saveToStorage();renderContent();
+  focusLastInput(isVar);
+  showToast('fa-plus-circle','Ligne ajoutée ('+MONTHS[m]+' seul)');
+}
+
+function focusLastInput(isVar){
   var sel=isVar?'.var-row .row-label input':'.budget-row .row-label input';
   var rows=document.querySelectorAll(sel);
   if(rows.length>0)rows[rows.length-1].focus();
 }
-function syncDeleteRow(type,m,idx){
-  showConfirmDialog('Supprimer cette ligne ?','Elle sera supprimée de tous les mois.',function(){
-    initYearData();var yd=data[getYearKey()];
-    for(var i=0;i<12;i++){if(yd.months[i][type]&&yd.months[i][type].length>idx)yd.months[i][type].splice(idx,1)}
-    saveToStorage();renderTabs();renderContent();
-  });
+
+// ===== DELETE ROW WITH SCOPE CHOICE =====
+function handleDeleteRow(type,m,idx){
+  var label=gM(m)[type][idx].label||'cette ligne';
+  showDeleteScopeDialog(
+    'Supprimer « '+escapeHtml(label)+' »',
+    'Supprimer de :',
+    function(){
+      initYearData();var yd=data[getYearKey()];
+      for(var i=0;i<12;i++){if(yd.months[i][type]&&yd.months[i][type].length>idx)yd.months[i][type].splice(idx,1)}
+      saveToStorage();renderTabs();renderContent();
+      showToast('fa-trash','Supprimé (toute l\'année)');
+    },
+    function(){
+      initYearData();var yd=data[getYearKey()];
+      if(yd.months[m][type]&&yd.months[m][type].length>idx)yd.months[m][type].splice(idx,1);
+      saveToStorage();renderTabs();renderContent();
+      showToast('fa-trash','Supprimé ('+MONTHS[m]+' seul)');
+    },
+    m
+  );
 }
+
 function moveRow(type,m,idx,dir){
   initYearData();var yd=data[getYearKey()];var newIdx=idx+dir;
   if(type==='annual'){
     var arr=yd.annualExpenses;if(newIdx<0||newIdx>=arr.length)return;
     var tmp=arr[idx];arr[idx]=arr[newIdx];arr[newIdx]=tmp;
+  } else if(type==='savingsLines'){
+    var sArr=yd.months[m].savingsLines;if(newIdx<0||newIdx>=sArr.length)return;
+    var st=sArr[idx];sArr[idx]=sArr[newIdx];sArr[newIdx]=st;
   } else {
     for(var i=0;i<12;i++){
       var arr2=yd.months[i][type];
@@ -526,12 +805,41 @@ function moveRow(type,m,idx,dir){
 }
 function updateAmount(type,m,idx,val){gM(m)[type][idx].amount=parseFloat(val)||0;saveToStorage();renderTabs();renderContent()}
 function updateVarAmount(m,idx,field,val){gM(m).variableExpenses[idx][field]=parseFloat(val)||0;saveToStorage();renderTabs();renderContent()}
-function updateSavings(m,val){gM(m).savings=parseFloat(val)||0;saveToStorage();renderTabs();renderContent()}
+
+// ===== SAVINGS LINES =====
+function addSavingsLine(m){
+  initYearData();
+  var md=data[getYearKey()].months[m];
+  md.savingsLines.push({label:'',amount:0});
+  saveToStorage();renderTabs();renderContent();
+  var rows=document.querySelectorAll('.savings-line-row .row-label input');
+  if(rows.length>0)rows[rows.length-1].focus();
+}
+function updateSavingsLineLabel(m,idx,val){
+  gM(m).savingsLines[idx].label=val;
+  saveToStorage();renderTabs();renderContent();
+}
+function updateSavingsLineAmount(m,idx,val){
+  gM(m).savingsLines[idx].amount=parseFloat(val)||0;
+  saveToStorage();renderTabs();renderContent();
+}
+function deleteSavingsLine(m,idx){
+  var label=gM(m).savingsLines[idx].label||'cette ligne';
+  showConfirmDialog('Supprimer « '+escapeHtml(label)+' » ?','Cette ligne d\'épargne sera supprimée pour '+MONTHS[m]+'.',function(){
+    gM(m).savingsLines.splice(idx,1);
+    saveToStorage();renderTabs();renderContent();
+    showToast('fa-trash','Ligne d\'épargne supprimée');
+  });
+}
+
+// ===== ANNUAL EXPENSES =====
 function updateGoal(val){sSG(val);saveToStorage();renderContent()}
 function updateAnnualLabel(idx,val){gAE()[idx].label=val;saveToStorage()}
-function updateAnnualAmount(idx,val){gAE()[idx].amount=parseFloat(val)||0;saveToStorage();renderTabs();renderContent()}
+function updateAnnualPrevu(idx,val){gAE()[idx].prevu=parseFloat(val)||0;saveToStorage();renderTabs();renderContent()}
+function updateAnnualPreleve(idx,val){gAE()[idx].preleve=parseFloat(val)||0;saveToStorage();renderTabs();renderContent()}
 function updateAnnualMonth(idx,val){gAE()[idx].month=parseInt(val,10);saveToStorage();renderTabs();renderContent()}
-function addAnnualExpense(){gAE().push({label:'',amount:0,month:0});saveToStorage();renderContent();var r=document.querySelectorAll('.annual-row .row-label input');if(r.length>0)r[r.length-1].focus()}
+function updateAnnualCompte(idx,val){gAE()[idx].compte=val;saveToStorage();renderContent()}
+function addAnnualExpense(){gAE().push({label:'',prevu:0,preleve:0,month:0,compte:''});saveToStorage();renderContent();var r=document.querySelectorAll('.annual-row .row-label input');if(r.length>0)r[r.length-1].focus()}
 function deleteAnnualExpense(idx){showConfirmDialog('Supprimer cette dépense annuelle ?','Elle sera retirée du mois correspondant.',function(){gAE().splice(idx,1);saveToStorage();renderTabs();renderContent()})}
 
 // ===== YEAR =====
@@ -544,7 +852,43 @@ function importData(event){var f=event.target.files[0];if(!f)return;var r=new Fi
 function showResetConfirm(){showConfirmDialog('Réinitialiser ?','Données de '+currentYear+' effacées.',function(){delete data[getYearKey()];initYearData();saveToStorage();renderTabs();renderContent();showToast('fa-rotate-left','Données réinitialisées')})}
 
 // ===== MODAL / TOAST =====
-function showConfirmDialog(title,msg,cb){var o=document.getElementById('modalOverlay'),c=document.getElementById('modalContent');c.innerHTML='<h3>'+escapeHtml(title)+'</h3><p>'+escapeHtml(msg)+'</p><div class="modal-actions"><button class="modal-btn cancel" id="mC">Annuler</button><button class="modal-btn confirm" id="mK">Confirmer</button></div>';o.classList.add('show');document.getElementById('mC').onclick=function(){o.classList.remove('show')};document.getElementById('mK').onclick=function(){o.classList.remove('show');cb()};o.onclick=function(e){if(e.target===o)o.classList.remove('show')}}
+function showConfirmDialog(title,msg,cb){
+  var o=document.getElementById('modalOverlay'),c=document.getElementById('modalContent');
+  c.innerHTML='<h3>'+escapeHtml(title)+'</h3><p>'+escapeHtml(msg)+'</p><div class="modal-actions"><button class="modal-btn cancel" id="mC">Annuler</button><button class="modal-btn confirm" id="mK">Confirmer</button></div>';
+  o.classList.add('show');
+  document.getElementById('mC').onclick=function(){o.classList.remove('show')};
+  document.getElementById('mK').onclick=function(){o.classList.remove('show');cb()};
+  o.onclick=function(e){if(e.target===o)o.classList.remove('show')};
+}
+
+function showScopeDialog(title,msg,cbYear,cbMonth,m){
+  var o=document.getElementById('modalOverlay'),c=document.getElementById('modalContent');
+  c.innerHTML='<h3>'+title+'</h3><p>'+msg+'</p><div class="modal-actions">'
+    +'<button class="modal-btn cancel" id="mC">Annuler</button>'
+    +'<button class="modal-btn secondary" id="mMonth"><i class="fas fa-calendar-day"></i> '+MONTHS_SHORT[m]+' seul</button>'
+    +'<button class="modal-btn primary" id="mYear"><i class="fas fa-calendar-alt"></i> Toute l\'année</button>'
+    +'</div>';
+  o.classList.add('show');
+  document.getElementById('mC').onclick=function(){o.classList.remove('show')};
+  document.getElementById('mMonth').onclick=function(){o.classList.remove('show');cbMonth()};
+  document.getElementById('mYear').onclick=function(){o.classList.remove('show');cbYear()};
+  o.onclick=function(e){if(e.target===o)o.classList.remove('show')};
+}
+
+function showDeleteScopeDialog(title,msg,cbYear,cbMonth,m){
+  var o=document.getElementById('modalOverlay'),c=document.getElementById('modalContent');
+  c.innerHTML='<h3>'+title+'</h3><p>'+msg+'</p><div class="modal-actions">'
+    +'<button class="modal-btn cancel" id="mC">Annuler</button>'
+    +'<button class="modal-btn secondary" id="mMonth"><i class="fas fa-calendar-day"></i> '+MONTHS_SHORT[m]+' seul</button>'
+    +'<button class="modal-btn confirm" id="mYear"><i class="fas fa-calendar-alt"></i> Toute l\'année</button>'
+    +'</div>';
+  o.classList.add('show');
+  document.getElementById('mC').onclick=function(){o.classList.remove('show')};
+  document.getElementById('mMonth').onclick=function(){o.classList.remove('show');cbMonth()};
+  document.getElementById('mYear').onclick=function(){o.classList.remove('show');cbYear()};
+  o.onclick=function(e){if(e.target===o)o.classList.remove('show')};
+}
+
 function showToast(icon,msg){var t=document.getElementById('toast');t.querySelector('.toast-icon').className='toast-icon fas '+icon;t.querySelector('.toast-text').textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2500)}
 
 // ===== UTILS =====
