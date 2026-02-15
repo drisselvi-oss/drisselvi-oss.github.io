@@ -787,7 +787,7 @@ function renderMonthPage(m){
 	 var rm=pr.dueMonth-m;metaTxt=fmt(pr.fullAmount)+' en '+MONTHS[pr.dueMonth]+' — encore '+rm+' mois';}
      h+='<div class="budget-row provision-row"><div class="row-label"><div class="provision-detail-label"><span class="prov-name">'+escapeHtml(pr.label)+(pr.compte?' <small style="color:var(--savings);font-weight:800">\u2192 '+escapeHtml(pr.compte)+'</small>':'')+'</span><span class="prov-meta">'+metaTxt+'</span></div></div><div class="row-amount"><div class="auto-value">'+fmt(pr.monthlyAmount)+'</div></div><div class="row-delete"></div></div>';}}
    h+='</div>';
-   
+}
 
   // Annual due this month
   var annuals=gAFM(m);
