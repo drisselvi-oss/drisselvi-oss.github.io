@@ -654,14 +654,6 @@ function renderMonthPage(m){
   h+='<div class="balance-bar"><div class="balance-bar-fill '+(baFull>=0?'positive':'negative')+'" style="width:'+Math.abs(ratioA)+'%"></div></div></div>';
   h+='</div>';
 
-  // Carryover from previous month
-  if(carry!==0){
-    h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon carryover-icon"><i class="fas fa-right-left"></i></span>Solde mois précédent<span class="carryover-badge">AUTO</span></div><div class="section-total" style="color:'+(carry>=0?'var(--green)':'var(--red)')+'">'+fmt(carry)+'</div></div>';
-    h+='<div class="budget-row carryover-row"><div class="row-label" style="color:var(--carryover);font-weight:700">Report '+(m===0?'année '+(currentYear-1)+' — Décembre':MONTHS[m-1])+'</div>';
-    h+='<div class="row-amount"><div class="auto-value" style="color:'+(carry>=0?'var(--green)':'var(--red)')+'">'+fmt(carry)+'</div></div></div>';
-    h+='</div>';
-  }
-
   // Income
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon income-icon"><i class="fas fa-arrow-down"></i></span>Revenus</div><div class="section-total income-total">'+fmt(ti)+'</div></div>';
   for(var i=0;i<md.income.length;i++) h+=buildRow('income',m,i,md.income[i],md.income.length);
