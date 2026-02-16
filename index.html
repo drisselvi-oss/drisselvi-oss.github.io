@@ -533,27 +533,7 @@ function getTotalProvisionInflowForAccount(accountName){
   }
   return total;
 }
-
-function computeBalActualFull(m, year){
-  var savedYear=currentYear;
-  currentYear=year;
-  initYearData();
-  var ti=gTI(m), te=gTE(m), at_preleve_noProv=gATFM_preleve_noProv(m), sv=gMSDeducted(m), pt=gPTFM(m), va=gVA(m);
-  var ownBal=ti-te-at_preleve_noProv-sv-pt-va;
-  var carry=0;
-  if(m===0){
-    var prevKey='y'+(year-1);
-    if(data[prevKey] && data[prevKey].months){
-      carry=computeBalActualFull(11, year-1);
-    }
-  } else {
-    carry=computeBalActualFull(m-1, year);
-  }
-  currentYear=savedYear;
-  initYearData();
-  return ownBal+carry;
-}
-
+  
 // Balances — use gMSDeducted instead of gMS for balance calculations
 function balForecast(m){return gTI(m)-gTE(m)-gATFM_prevu_noProv(m)-gMSDeducted(m)-gPTFM(m)-gVF(m)}
 function balActual(m){return gTI(m)-gTE(m)-gATFM_preleve_noProv(m)-gMSDeducted(m)-gPTFM(m)-gVA(m)}
