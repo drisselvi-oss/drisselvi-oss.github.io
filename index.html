@@ -99,14 +99,24 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
 .budget-row:hover{background:var(--input-bg)}
 .budget-row.auto-row{background:var(--annual-badge-bg);cursor:default;grid-template-columns:1fr 130px 32px}
 .budget-row.auto-row:hover{background:var(--annual-badge-bg)}
-.budget-row.provision-row{background:var(--blue-bg);cursor:default;grid-template-columns:1fr 130px 32px}
+.budget-row.provision-row{background:var(--blue-bg);cursor:default;grid-template-columns:1fr 110px 50px}
 .budget-row.provision-row:hover{background:var(--blue-bg)}
 .budget-row.provision-row .auto-value{color:var(--blue)}
+.budget-row.provision-row.prov-checked{background:var(--green-bg)}
+.budget-row.provision-row.prov-checked:hover{background:var(--green-bg)}
+.budget-row.provision-row.prov-checked .auto-value{color:var(--green)}
+.budget-row.provision-row.prov-checked .prov-name{color:var(--green)}
 .budget-row.carryover-row{background:var(--carryover-bg);cursor:default;grid-template-columns:1fr 130px}
 .budget-row.carryover-row:hover{background:var(--carryover-bg)}
 .provision-detail-label{display:flex;flex-direction:column;gap:1px}
 .provision-detail-label .prov-name{font-size:14px;font-weight:600;color:var(--text-primary)}
 .provision-detail-label .prov-meta{font-size:11px;color:var(--text-muted);font-weight:600}
+.prov-progress{width:100%;height:4px;border-radius:2px;background:var(--border);margin-top:3px;overflow:hidden}
+.prov-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .4s ease}
+.prov-check-cell{display:flex;flex-direction:column;align-items:center;gap:1px}
+.prov-check-cell .toggle-hint{color:var(--text-muted)}
+.prov-check-cell .toggle-hint.done{color:var(--green)}
+.toggle-switch input:checked+.toggle-slider.prov-slider{background:var(--green)}
 /* Variable row */
 .var-row{display:grid;grid-template-columns:28px 1fr 100px 100px 32px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);transition:background .15s;gap:4px}
 .var-row:last-child{border-bottom:none}
@@ -431,6 +441,7 @@ function initYearData(){
       delete ae.amount;
     }
     if(typeof ae.compte==='undefined') ae.compte='';
+    if(!ae.provDone) ae.provDone={};
   }
 }
 
@@ -451,15 +462,13 @@ function gATFM_preleve(mi){return gAFM(mi).reduce(function(s,a){return s+(parseF
 // If a compte is assigned, the preleve comes from the savings account, not the monthly balance
 function gATFM_prevu_noProv(mi){
   return gAFM(mi).reduce(function(s,a){
-    if(a.month===0) return s+(parseFloat(a.prevu)||0);
-    if(a.month===0 && !a.compte) return s+(parseFloat(a.prevu)||0);
+    if(!a.compte) return s+(parseFloat(a.prevu)||0);
     return s;
   },0);
 }
 function gATFM_preleve_noProv(mi){
   return gAFM(mi).reduce(function(s,a){
-    if(a.month===0) return s+(parseFloat(a.preleve)||0);
-    if(a.month===0 && !a.compte) return s+(parseFloat(a.preleve)||0);
+    if(!a.compte) return s+(parseFloat(a.preleve)||0);
     return s;
   },0);
 }
@@ -489,12 +498,51 @@ function gVF(m){return gM(m).variableExpenses.reduce(function(s,r){return s+(par
 function gVA(m){return gM(m).variableExpenses.reduce(function(s,r){return s+(parseFloat(r.actual)||0)},0)}
 
 // Provision — monthly amounts saved toward annual expenses
+// Lissage dynamique: recalcule en fonction de ce qui a déjà été provisionné (provDone)
+// et du solde du compte épargne choisi
 function gAPFM(mi){
   var annuals=gAE(),total=0,details=[];
   for(var i=0;i<annuals.length;i++){
     var a=annuals[i],dm=a.month,amt=parseFloat(a.prevu)||0;
     if(amt<=0||dm===0)continue;
-    if(mi<dm){var ms=dm,mc=amt/ms;total+=mc;details.push({label:a.label||'Dépense annuelle',monthlyAmount:mc,fullAmount:amt,dueMonth:dm,monthsToSave:ms,compte:a.compte||''})}
+    if(mi<dm){
+      var provDone=a.provDone||{};
+      // Somme de ce qui a déjà été provisionné (mois cochés avant mi)
+      var totalDone=0;
+      for(var pm=0;pm<mi;pm++){
+        if(provDone[pm]) totalDone+=provDone[pm];
+      }
+      // Si un compte épargne est assigné, prendre en compte son solde existant
+      // (épargne directe + provisions déjà cochées - prélèvements passés)
+      var accountCredit=0;
+      if(a.compte){
+        // Solde du compte depuis les lignes d'épargne (hors provisions)
+        var yd=data[getYearKey()];
+        for(var sm=0;sm<mi;sm++){
+          var lines=yd.months[sm].savingsLines;
+          for(var sl=0;sl<lines.length;sl++){
+            if((lines[sl].label||'')===a.compte){
+              accountCredit+=(parseFloat(lines[sl].amount)||0);
+            }
+          }
+        }
+        // Répartir le crédit du compte au prorata entre toutes les dépenses annuelles du même compte
+        var sameAccountTotal=0;
+        for(var sa=0;sa<annuals.length;sa++){
+          if((annuals[sa].compte||'')===a.compte && (parseFloat(annuals[sa].prevu)||0)>0 && annuals[sa].month>0){
+            sameAccountTotal+=(parseFloat(annuals[sa].prevu)||0);
+          }
+        }
+        if(sameAccountTotal>0) accountCredit=accountCredit*(amt/sameAccountTotal);
+        else accountCredit=0;
+      }
+      var remaining=Math.max(0, amt - totalDone - accountCredit);
+      var remainingMonths=dm-mi;
+      var mc=remainingMonths>0?remaining/remainingMonths:0;
+      var isChecked=!!provDone[mi];
+      total+=mc;
+      details.push({label:a.label||'Dépense annuelle',monthlyAmount:mc,fullAmount:amt,dueMonth:dm,monthsToSave:remainingMonths,compte:a.compte||'',annualIdx:i,isChecked:isChecked,totalDone:totalDone,accountCredit:accountCredit});
+    }
   }
   return{total:total,details:details};
 }
@@ -506,7 +554,9 @@ function getProvisionForAccount(accountName, mi){
     var a=annuals[i],dm=a.month,amt=parseFloat(a.prevu)||0;
     if(amt<=0||dm===0)continue;
     if((a.compte||'')!==accountName) continue;
-    if(mi<dm){total+=amt/dm}
+    // Seuls les mois cochés (provDone) comptent comme contributions réelles
+    var provDone=a.provDone||{};
+    if(provDone[mi]) total+=provDone[mi];
     if(mi===dm){total-=(parseFloat(a.preleve)||0)}
   }
   return total;
@@ -537,11 +587,13 @@ function getTotalPreleveForAccount(accountName){
 function getTotalProvisionInflowForAccount(accountName){
   var annuals=gAE(),total=0;
   for(var i=0;i<annuals.length;i++){
-    var a=annuals[i],dm=a.month,amt=parseFloat(a.prevu)||0;
-    if(amt<=0||dm===0)continue;
+    var a=annuals[i];
     if((a.compte||'')!==accountName) continue;
-    var monthsProvided=Math.min(dm, 12);
-    total+=(amt/dm)*monthsProvided;
+    // Seules les provisions effectivement cochées comptent
+    var provDone=a.provDone||{};
+    for(var pm in provDone){
+      if(provDone.hasOwnProperty(pm)) total+=provDone[pm];
+    }
   }
   return total;
 }
@@ -566,13 +618,6 @@ function computeBalActualFull(m, year){
   var ti=gTI(m), te=gTE(m), at_preleve_noProv=gATFM_preleve_noProv(m), sv=gMSDeducted(m), pt=gPTFM(m), va=gVA(m);
   var ownBal=ti-te-at_preleve_noProv-sv-pt-va;
   var carry=0;
-  if(m===0){
-    var prevKey='y'+(year-1);
-    if(data[prevKey] && data[prevKey].months){
-      carry=computeBalActualFull(11, year-1);
-    }
-  } else {
-    carry=computeBalActualFull(m-1, year);
   if(isCarryoverEnabled()){
     if(m===0){
       var prevKey='y'+(year-1);
@@ -737,11 +782,21 @@ function renderMonthPage(m){
   h+=buildAddArea('variableExpenses',m);
   h+='</div>';
 
-  // Provision
-  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon provision-icon"><i class="fas fa-vault"></i></span>Épargne dép. annuelles<span class="provision-badge">AUTO</span></div><div class="section-total provision-total">'+fmt(pt)+'</div></div>';
+  // Provision with checkboxes
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon provision-icon"><i class="fas fa-vault"></i></span>Épargne dép. annuelles</div><div class="section-total provision-total">'+fmt(pt)+'</div></div>';
   if(prov.details.length===0){h+='<div class="empty-state"><i class="fas fa-check-circle"></i><p>Aucun provisionnement ce mois.</p></div>';}
   else{for(var p=0;p<prov.details.length;p++){var pr=prov.details[p],rm=pr.dueMonth-m;
-    h+='<div class="budget-row provision-row"><div class="row-label"><div class="provision-detail-label"><span class="prov-name">'+escapeHtml(pr.label)+(pr.compte?' <small style="color:var(--savings);font-weight:800">\u2192 '+escapeHtml(pr.compte)+'</small>':'')+'</span><span class="prov-meta">'+fmt(pr.fullAmount)+' en '+MONTHS[pr.dueMonth]+' — encore '+rm+' mois</span></div></div><div class="row-amount"><div class="auto-value">'+fmt(pr.monthlyAmount)+'</div></div><div class="row-delete"></div></div>';}}
+    var provPct=pr.fullAmount>0?Math.min(100,((pr.totalDone+pr.accountCredit)/pr.fullAmount)*100):0;
+    var checkedCls=pr.isChecked?' prov-checked':'';
+    h+='<div class="budget-row provision-row'+checkedCls+'">';
+    h+='<div class="row-label"><div class="provision-detail-label"><span class="prov-name">'+(pr.isChecked?'<i class="fas fa-check" style="font-size:10px;margin-right:4px"></i>':'')+escapeHtml(pr.label)+(pr.compte?' <small style="color:var(--savings);font-weight:800">\u2192 '+escapeHtml(pr.compte)+'</small>':'')+'</span>';
+    h+='<span class="prov-meta">'+fmt(pr.fullAmount)+' en '+MONTHS[pr.dueMonth]+' — encore '+rm+' mois · provisionné '+fmt(pr.totalDone+pr.accountCredit)+' / '+fmt(pr.fullAmount)+'</span>';
+    h+='<div class="prov-progress"><div class="prov-progress-fill" style="width:'+provPct+'%"></div></div>';
+    h+='</div></div>';
+    h+='<div class="row-amount"><div class="auto-value">'+fmt(pr.monthlyAmount)+'</div></div>';
+    h+='<div class="prov-check-cell"><label class="toggle-switch"><input type="checkbox"'+(pr.isChecked?' checked':'')+' onchange="toggleProvision('+pr.annualIdx+','+m+',this.checked,'+pr.monthlyAmount+')"><span class="toggle-slider prov-slider"></span></label>';
+    h+='<div class="toggle-hint'+(pr.isChecked?' done':'')+'">'+(pr.isChecked?'Fait':'À faire')+'</div></div>';
+    h+='</div>';}}
   h+='</div>';
 
   // Annual due this month
@@ -1262,6 +1317,22 @@ function deleteSavingsLine(m,idx){
   });
 }
 
+// ===== PROVISION TOGGLE =====
+function toggleProvision(annualIdx, month, checked, amount){
+  initYearData();
+  var ae=gAE()[annualIdx];
+  if(!ae) return;
+  if(!ae.provDone) ae.provDone={};
+  if(checked){
+    ae.provDone[month]=parseFloat(amount)||0;
+  } else {
+    delete ae.provDone[month];
+  }
+  saveToStorage();renderTabs();renderContent();
+  if(checked) showToast('fa-check-circle','Provision cochée — '+MONTHS[month]);
+  else showToast('fa-rotate-left','Provision décochée — '+MONTHS[month]);
+}
+
 // ===== ANNUAL EXPENSES =====
 function updateGoal(val){sSG(val);saveToStorage();renderContent()}
 function updateAnnualLabel(idx,val){gAE()[idx].label=val;saveToStorage()}
@@ -1269,17 +1340,15 @@ function updateAnnualPrevu(idx,val){gAE()[idx].prevu=parseFloat(val)||0;saveToSt
 function updateAnnualPreleve(idx,val){gAE()[idx].preleve=parseFloat(val)||0;saveToStorage();renderTabs();renderContent()}
 function updateAnnualMonth(idx,val){gAE()[idx].month=parseInt(val,10);saveToStorage();renderTabs();renderContent()}
 function updateAnnualCompte(idx,val){gAE()[idx].compte=val;saveToStorage();renderContent()}
-function addAnnualExpense(){gAE().push({label:'',prevu:0,preleve:0,month:0,compte:''});saveToStorage();renderContent();var r=document.querySelectorAll('.annual-row .row-label input');if(r.length>0)r[r.length-1].focus()}
+function addAnnualExpense(){gAE().push({label:'',prevu:0,preleve:0,month:0,compte:'',provDone:{}});saveToStorage();renderContent();var r=document.querySelectorAll('.annual-row .row-label input');if(r.length>0)r[r.length-1].focus()}
 function deleteAnnualExpense(idx){showConfirmDialog('Supprimer cette dépense annuelle ?','Elle sera retirée du mois correspondant.',function(){gAE().splice(idx,1);saveToStorage();renderTabs();renderContent()})}
 
 // ===== YEAR =====
-function changeYear(d){currentYear+=d;document.getElementById('yearDisplay').textContent=currentYear;initYearData();renderTabs();renderContent()}
 function changeYear(d){currentYear+=d;document.getElementById('yearDisplay').textContent=currentYear;initYearData();syncCarryoverToggle();renderTabs();renderContent()}
 
 // ===== EXPORT / IMPORT =====
 function exportData(){var b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='budget_'+currentYear+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);showToast('fa-check-circle','Données exportées')}
 function triggerImport(){document.getElementById('fileInput').click()}
-function importData(event){var f=event.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){try{var imp=JSON.parse(e.target.result);if(typeof imp==='object'&&imp!==null){data=imp;var k=Object.keys(data);if(k.length>0){currentYear=parseInt(k[0].substring(1),10);document.getElementById('yearDisplay').textContent=currentYear}saveToStorage();renderTabs();renderContent();showToast('fa-check-circle','Données importées')}}catch(err){showToast('fa-exclamation-triangle','Fichier invalide')}};r.readAsText(f);event.target.value=''}
 function importData(event){var f=event.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){try{var imp=JSON.parse(e.target.result);if(typeof imp==='object'&&imp!==null){data=imp;var k=Object.keys(data);if(k.length>0){currentYear=parseInt(k[0].substring(1),10);document.getElementById('yearDisplay').textContent=currentYear}saveToStorage();initYearData();syncCarryoverToggle();renderTabs();renderContent();showToast('fa-check-circle','Données importées')}}catch(err){showToast('fa-exclamation-triangle','Fichier invalide')}};r.readAsText(f);event.target.value=''}
 function showResetConfirm(){showConfirmDialog('Réinitialiser ?','Données de '+currentYear+' effacées.',function(){delete data[getYearKey()];initYearData();saveToStorage();renderTabs();renderContent();showToast('fa-rotate-left','Données réinitialisées')})}
 
@@ -1331,7 +1400,6 @@ function escapeAttr(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quo
 function syncCarryoverToggle(){var cb=document.getElementById('carryoverToggle');if(cb)cb.checked=isCarryoverEnabled()}
 var didLoad=loadFromStorage();
 if(didLoad){var sk=Object.keys(data);if(sk.length>0){var yrs=sk.map(function(k){return parseInt(k.substring(1),10)}).sort();currentYear=yrs[yrs.length-1];document.getElementById('yearDisplay').textContent=currentYear}}
-initYearData();renderTabs();renderContent();
 initYearData();syncCarryoverToggle();renderTabs();renderContent();
 </script>
 </body>
