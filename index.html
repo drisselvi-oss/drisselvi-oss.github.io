@@ -310,8 +310,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
   .annual-row{grid-template-columns:24px 1fr 90px 80px 80px 65px 75px 28px;padding:6px 8px;gap:3px}
   .annual-col-headers{grid-template-columns:24px 1fr 90px 80px 80px 65px 75px 28px;padding:4px 8px;gap:3px}
   .annual-summary-5{grid-template-columns:repeat(3,1fr)}
-  .account-table-header{grid-template-columns:36px 1fr 75px 75px 75px 75px;padding:8px 12px;font-size:10px}
-  .account-table-row{grid-template-columns:36px 1fr 75px 75px 75px 75px;padding:10px 12px}
+  .account-table-header{grid-template-columns:36px 1fr 75px 75px 75px 75px 32px !important;padding:8px 12px;font-size:10px}
+  .account-table-row{grid-template-columns:36px 1fr 75px 75px 75px 75px 32px !important;padding:10px 12px}
   .savings-line-row{grid-template-columns:24px 1fr 90px 38px 28px;padding:6px 10px}
   .savings-line-col-headers{grid-template-columns:24px 1fr 90px 38px 28px;padding:4px 10px}
 }
@@ -335,8 +335,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
   .savings-line-col-headers{grid-template-columns:24px 1fr 80px 36px 28px;padding:4px 10px;font-size:9px}
   .savings-table-header{grid-template-columns:40px 1fr 80px 90px;padding:8px 12px;font-size:10px}
   .savings-table-row{grid-template-columns:40px 1fr 80px 90px;padding:10px 12px}
-  .account-table-header{grid-template-columns:36px 1fr 65px 65px 65px 65px;padding:8px 10px;font-size:9px}
-  .account-table-row{grid-template-columns:36px 1fr 65px 65px 65px 65px;padding:10px 10px}
+  .account-table-header{grid-template-columns:36px 1fr 65px 65px 65px 65px 28px !important;padding:8px 10px;font-size:9px}
+  .account-table-row{grid-template-columns:36px 1fr 65px 65px 65px 65px 28px !important;padding:10px 10px}
   .section-header{padding:12px 14px}
   .summary-card .value{font-size:17px}
   .tab-btn{padding:7px 10px;font-size:12px}
@@ -405,8 +405,27 @@ function initYearData(){
   var key=getYearKey();
   if(!data[key]){
     data[key]={months:[],annualExpenses:[],savingsGoal:0,savingsAccounts:[]};
+    data[key]={months:[],annualExpenses:[],savingsGoals:[],savingsAccounts:[]};
     for(var i=0;i<12;i++) data[key].months.push({
       income:JSON.parse(JSON.stringify(DEF_INCOME)),
+      expenses:JSON.parse(JSON.stringify(DEF_EXPENSES)),
+    });
+  }
+  var yd=data[key];
+  if(typeof yd.savingsGoal==='undefined') yd.savingsGoal=0;
+  // Migrate old single savingsGoal to new savingsGoals array
+  if(!yd.savingsGoals) yd.savingsGoals=[];
+  if(typeof yd.savingsGoal==='number' && yd.savingsGoal>0){
+    yd.savingsGoals.push({account:'',goal:yd.savingsGoal});
+    delete yd.savingsGoal;
+  } else {
+    delete yd.savingsGoal;
+  }
+  if(!yd.savingsAccounts) yd.savingsAccounts=[];
+  if(typeof yd.carryoverEnabled==='undefined') yd.carryoverEnabled=true;
+  for(var j=0;j<12;j++){
+  
+	 income:JSON.parse(JSON.stringify(DEF_INCOME)),
       expenses:JSON.parse(JSON.stringify(DEF_EXPENSES)),
       variableExpenses:JSON.parse(JSON.stringify(DEF_VARIABLE)),
       savingsLines:[]
@@ -449,6 +468,16 @@ function gM(m){initYearData();return data[getYearKey()].months[m]}
 function gAE(){initYearData();return data[getYearKey()].annualExpenses}
 function gSG(){initYearData();return data[getYearKey()].savingsGoal||0}
 function sSG(v){initYearData();data[getYearKey()].savingsGoal=parseFloat(v)||0}
+function gSGs(){initYearData();return data[getYearKey()].savingsGoals||[]}
+function getTotalGoal(){var goals=gSGs(),t=0;for(var i=0;i<goals.length;i++)t+=(parseFloat(goals[i].goal)||0);return t}
+function getGoalForAccount(name){var goals=gSGs();for(var i=0;i<goals.length;i++){if(goals[i].account===name)return parseFloat(goals[i].goal)||0}return 0}
+function getSoldeForAccount(name){
+  var accountTotals=getSavingsAccountTotals();
+  var acct=accountTotals[name]||{total:0};
+  var provInflow=getTotalProvisionInflowForAccount(name);
+  var totalPreleve=getTotalPreleveForAccount(name);
+  return acct.total+provInflow-totalPreleve;
+}
 
 function isCarryoverEnabled(){initYearData();return data[getYearKey()].carryoverEnabled!==false}
 function setCarryoverEnabled(v){initYearData();data[getYearKey()].carryoverEnabled=!!v;saveToStorage();renderTabs();renderContent()}
@@ -640,8 +669,33 @@ function balActualFull(m){
   return computeBalActualFull(m, currentYear);
 }
 
-function gTSY(){var t=0;for(var i=0;i<12;i++)t+=gMS(i);return t}
-function gCS(u){var t=0;for(var i=0;i<=u;i++)t+=gMS(i);return t}
+// Total savings for year = direct savings lines + all checked provisions - preleves from accounts
+function gTSY(){
+  var t=0;for(var i=0;i<12;i++)t+=gMS(i);
+  var annuals=gAE();
+  for(var a=0;a<annuals.length;a++){
+    if(!annuals[a].compte) continue;
+    var pd=annuals[a].provDone||{};
+    for(var pm in pd){if(pd.hasOwnProperty(pm)) t+=pd[pm]}
+    t-=(parseFloat(annuals[a].preleve)||0);
+  }
+  return t;
+}
+function gCS(u){
+  var t=0;for(var i=0;i<=u;i++)t+=gMS(i);
+  var annuals=gAE();
+  for(var a=0;a<annuals.length;a++){
+    if(!annuals[a].compte) continue;
+    var pd=annuals[a].provDone||{};
+    for(var pm in pd){
+      if(pd.hasOwnProperty(pm) && parseInt(pm,10)<=u) t+=pd[pm];
+    }
+    if(annuals[a].month<=u){
+      t-=(parseFloat(annuals[a].preleve)||0);
+    }
+  }
+  return t;
+}
 function fmt(n){return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(n)}
 
 function getAllSavingsAccountNames(){
@@ -892,16 +946,14 @@ function renderAnnualPage(){
   var avgP=tPrevu/12;
   var perMonth=[],mx=0;
   for(var mi=0;mi<12;mi++){var t=gATFM_prevu(mi);perMonth.push(t);if(t>mx)mx=t}
-  var tiy=0,tey=0;for(var yi=0;yi<12;yi++){tiy+=gTI(yi);tey+=gTE(yi)}
-  var yb=tiy-tey-tPrevu-gTSY();
   var diffCls=tDiff>0?'diff-pos':(tDiff<0?'diff-neg':'');
 
-  var h='<div class="annual-summary-5">';
+  var h='<div class="annual-summary" style="grid-template-columns:repeat(4,1fr)">';
   h+='<div class="summary-card"><div class="label">Total prévu</div><div class="value" style="color:var(--annual-badge)">'+fmt(tPrevu)+'</div></div>';
   h+='<div class="summary-card"><div class="label">Total prélevé</div><div class="value" style="color:var(--text-primary)">'+fmt(tPreleve)+'</div></div>';
   h+='<div class="summary-card"><div class="label">Différence</div><div class="value '+diffCls+'">'+fmt(tDiff)+'</div></div>';
   h+='<div class="summary-card"><div class="label">Moyenne / mois</div><div class="value" style="color:var(--annual-badge)">'+fmt(avgP)+'</div></div>';
-  h+='<div class="summary-card balance"><div class="label">Bilan année</div><div class="value '+(yb>=0?'positive':'negative')+'">'+fmt(yb)+'</div></div></div>';
+  h+='</div>';
 
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon annual-icon"><i class="fas fa-chart-bar"></i></span>Répartition mensuelle</div></div><div class="annual-month-dist">';
   for(var di=0;di<12;di++){var pct=mx>0?(perMonth[di]/mx)*100:0;h+='<div class="dist-row"><span class="dist-label">'+MONTHS_SHORT[di]+'</span><div class="dist-bar"><div class="dist-bar-fill" style="width:'+pct+'%"></div></div><span class="dist-amount">'+fmt(perMonth[di])+'</span></div>';}
@@ -940,10 +992,10 @@ function buildAnnualRow(idx,row,len){
   h+='</select></div><div class="row-delete"><button onclick="deleteAnnualExpense('+idx+')"><i class="fas fa-xmark"></i></button></div></div>';
   return h;
 }
-
 // ===== SAVINGS PAGE =====
 function renderSavingsPage(){
   var ts=gTSY(),goal=gSG(),avg=ts/12,gPct=goal>0?Math.min(100,(ts/goal)*100):0;
+  var ts=gTSY(),totalGoal=getTotalGoal(),avg=ts/12,gPct=totalGoal>0?Math.min(100,(ts/totalGoal)*100):0;
   var mSav=[],mxS=0;for(var si=0;si<12;si++){var sv=gMS(si);mSav.push(sv);if(sv>mxS)mxS=sv}
   var h='<div class="savings-summary">';
   h+='<div class="summary-card savings-card"><div class="label">Total épargné</div><div class="value">'+fmt(ts)+'</div></div>';
@@ -952,7 +1004,52 @@ function renderSavingsPage(){
 
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-bullseye"></i></span>Objectif annuel</div></div><div class="savings-goal-section"><div class="savings-goal-row"><label>Montant cible :</label><input type="number" inputmode="decimal" value="'+(goal||'')+'" placeholder="Ex: 5000" onfocus="this.select()" onchange="updateGoal(this.value)"></div>';
   if(goal>0){h+='<div class="savings-goal-bar"><div class="savings-goal-fill" style="width:'+gPct+'%"></div></div><div class="savings-goal-pct">'+fmt(ts)+' / '+fmt(goal)+' — '+gPct.toFixed(1)+'%</div>'}
+  h+='<div class="summary-card'+(totalGoal>0?' savings-card':'')+'"><div class="label">Objectifs</div><div class="value"'+(totalGoal<=0?' style="color:var(--text-muted)"':'')+'>'+(totalGoal>0?fmt(totalGoal):'Non définis')+'</div>';
+  if(totalGoal>0){h+='<div class="balance-bar"><div class="balance-bar-fill positive" style="width:'+gPct+'%;background:var(--savings)"></div></div>'}
   h+='</div></div>';
+
+  // Objectifs par compte
+  var goals=gSGs();
+  var accounts=getAllSavingsAccountNames();
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-bullseye"></i></span>Objectifs par compte</div>';
+  if(totalGoal>0){h+='<div class="section-total savings-total">'+gPct.toFixed(1)+'%</div>'}
+  h+='</div>';
+  // List existing goals
+  if(goals.length>0){
+    h+='<div class="goal-list">';
+    for(var gi=0;gi<goals.length;gi++){
+      var g=goals[gi], gAmt=parseFloat(g.goal)||0, gAcct=g.account||'';
+      var soldeAcct=gAcct?getSoldeForAccount(gAcct):ts;
+      var pctG=gAmt>0?Math.min(100,(soldeAcct/gAmt)*100):0;
+      var pctCls=pctG>=100?'var(--green)':'var(--savings)';
+      h+='<div class="goal-item">';
+      h+='<div class="goal-item-top">';
+      h+='<div class="goal-item-info">';
+      h+='<select class="compte-select" style="min-width:140px" onchange="updateGoalAccount('+gi+',this.value)">';
+      h+='<option value=""'+(!gAcct?' selected':'')+'>— Tous comptes —</option>';
+      for(var ga=0;ga<accounts.length;ga++){
+        h+='<option value="'+escapeAttr(accounts[ga])+'"'+(accounts[ga]===gAcct?' selected':'')+'>'+escapeHtml(accounts[ga])+'</option>';
+      }
+      h+='</select>';
+      h+='</div>';
+      h+='<div class="goal-item-amount"><input type="number" inputmode="decimal" value="'+(gAmt||'')+'" placeholder="Montant" onfocus="this.select()" onchange="updateGoalAmount('+gi+',this.value)" style="width:120px;border:1px solid var(--border);background:var(--input-bg);border-radius:8px;padding:7px 10px;font-family:Nunito,sans-serif;font-size:16px;font-weight:700;color:var(--savings);text-align:right;outline:none"></div>';
+      h+='<div class="row-delete"><button onclick="deleteGoal('+gi+')"><i class="fas fa-xmark"></i></button></div>';
+      h+='</div>';
+      if(gAmt>0){
+        h+='<div class="goal-item-progress">';
+        h+='<div class="savings-goal-bar"><div class="savings-goal-fill" style="width:'+pctG+'%;background:linear-gradient(90deg,var(--savings),'+pctCls+')"></div></div>';
+        h+='<div class="goal-item-stats"><span style="color:var(--savings);font-weight:700;font-size:12px">'+fmt(soldeAcct)+' / '+fmt(gAmt)+'</span>';
+        h+='<span style="font-weight:800;font-size:13px;color:'+pctCls+'">'+pctG.toFixed(1)+'%</span></div>';
+        h+='</div>';
+      }
+      h+='</div>';
+    }
+    h+='</div>';
+  } else {
+    h+='<div class="empty-state"><i class="fas fa-bullseye"></i><p>Aucun objectif défini. Ajoutez-en un ci-dessous.</p></div>';
+  }
+  h+='<button class="add-savings-btn" onclick="addGoal()"><i class="fas fa-plus"></i> Ajouter un objectif</button>';
+  h+='</div>';
 
   // Per-account totals with provisions integrated
   var accountTotals=getSavingsAccountTotals();
@@ -961,20 +1058,26 @@ function renderSavingsPage(){
   if(accountNames.length===0){
     h+='<div class="empty-state"><i class="fas fa-piggy-bank"></i><p>Créez un compte ci-dessous ou ajoutez des lignes d\'épargne dans les mois.</p></div>';
   } else {
-    h+='<div class="account-table-header"><span></span><span>Compte</span><span style="text-align:right">Épargné</span><span style="text-align:right">Provisions</span><span style="text-align:right">Prélevé</span><span style="text-align:right">Solde</span></div>';
+    h+='<div class="account-table-header" style="grid-template-columns:40px 1fr 90px 90px 90px 90px 36px"><span></span><span>Compte</span><span style="text-align:right">Épargné</span><span style="text-align:right">Provisions</span><span style="text-align:right">Prélevé</span><span style="text-align:right">Solde</span><span></span></div>';
     for(var an=0;an<accountNames.length;an++){
       var name=accountNames[an],acct=accountTotals[name];
       var provInflow=getTotalProvisionInflowForAccount(name);
       var totalPreleve=getTotalPreleveForAccount(name);
       var solde=acct.total+provInflow-totalPreleve;
       var soldeCls=solde>0.005?'positive':(solde<-0.005?'negative':'zero');
-      h+='<div class="account-table-row">';
+      var canDelete=Math.abs(solde)<0.01;
+      h+='<div class="account-table-row" style="grid-template-columns:40px 1fr 90px 90px 90px 90px 36px">';
       h+='<div class="acct-icon"><i class="fas fa-landmark"></i></div>';
       h+='<div><div class="acct-name">'+escapeHtml(name)+'</div><div class="acct-count">'+acct.months+' mois alimenté'+(acct.months>1?'s':'')+'</div></div>';
       h+='<div class="acct-total">'+fmt(acct.total)+'</div>';
       h+='<div class="acct-provision">'+(provInflow>0?'+'+fmt(provInflow):'—')+'</div>';
       h+='<div class="acct-preleve">'+(totalPreleve>0?'-'+fmt(totalPreleve):'—')+'</div>';
       h+='<div class="acct-solde '+soldeCls+'">'+fmt(solde)+'</div>';
+      if(canDelete){
+        h+='<div class="row-delete"><button onclick="deleteSavingsAccount(\''+escapeAttr(name)+'\')" title="Supprimer ce compte"><i class="fas fa-xmark"></i></button></div>';
+      } else {
+        h+='<div></div>';
+      }
       h+='</div>';
     }
   }
@@ -992,6 +1095,7 @@ function renderSavingsPage(){
   h+='</div>';
   document.getElementById('mainContent').innerHTML=h;
   drawSavingsChart(mSav,goal);
+  drawSavingsChart(mSav,totalGoal);
 }
 
 function createSavingsAccount(){
@@ -1014,6 +1118,29 @@ function createSavingsAccount(){
   saveToStorage();
   renderContent();
   showToast('fa-check-circle','Compte « '+name+' » créé');
+}
+
+function deleteSavingsAccount(name){
+  showConfirmDialog('Supprimer le compte « '+escapeHtml(name)+' » ?','Ce compte sera supprimé ainsi que toutes les lignes d\'épargne et références associées.',function(){
+    initYearData();
+    var yd=data[getYearKey()];
+    // Remove from savingsAccounts list
+    if(yd.savingsAccounts){
+      yd.savingsAccounts=yd.savingsAccounts.filter(function(n){return n!==name});
+    }
+    // Remove savings lines referencing this account
+    for(var m=0;m<12;m++){
+      yd.months[m].savingsLines=yd.months[m].savingsLines.filter(function(sl){return (sl.label||'')!==name});
+    }
+    // Remove compte references in annual expenses
+    for(var a=0;a<yd.annualExpenses.length;a++){
+      if((yd.annualExpenses[a].compte||'')===name){
+        yd.annualExpenses[a].compte='';
+      }
+    }
+    saveToStorage();renderTabs();renderContent();
+    showToast('fa-trash','Compte « '+name+' » supprimé');
+  });
 }
 
 function drawSavingsChart(mSav,goal){
