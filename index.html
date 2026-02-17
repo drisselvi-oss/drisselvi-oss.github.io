@@ -405,27 +405,8 @@ function initYearData(){
   var key=getYearKey();
   if(!data[key]){
     data[key]={months:[],annualExpenses:[],savingsGoal:0,savingsAccounts:[]};
-    data[key]={months:[],annualExpenses:[],savingsGoals:[],savingsAccounts:[]};
     for(var i=0;i<12;i++) data[key].months.push({
       income:JSON.parse(JSON.stringify(DEF_INCOME)),
-      expenses:JSON.parse(JSON.stringify(DEF_EXPENSES)),
-    });
-  }
-  var yd=data[key];
-  if(typeof yd.savingsGoal==='undefined') yd.savingsGoal=0;
-  // Migrate old single savingsGoal to new savingsGoals array
-  if(!yd.savingsGoals) yd.savingsGoals=[];
-  if(typeof yd.savingsGoal==='number' && yd.savingsGoal>0){
-    yd.savingsGoals.push({account:'',goal:yd.savingsGoal});
-    delete yd.savingsGoal;
-  } else {
-    delete yd.savingsGoal;
-  }
-  if(!yd.savingsAccounts) yd.savingsAccounts=[];
-  if(typeof yd.carryoverEnabled==='undefined') yd.carryoverEnabled=true;
-  for(var j=0;j<12;j++){
-  
-	 income:JSON.parse(JSON.stringify(DEF_INCOME)),
       expenses:JSON.parse(JSON.stringify(DEF_EXPENSES)),
       variableExpenses:JSON.parse(JSON.stringify(DEF_VARIABLE)),
       savingsLines:[]
@@ -468,16 +449,6 @@ function gM(m){initYearData();return data[getYearKey()].months[m]}
 function gAE(){initYearData();return data[getYearKey()].annualExpenses}
 function gSG(){initYearData();return data[getYearKey()].savingsGoal||0}
 function sSG(v){initYearData();data[getYearKey()].savingsGoal=parseFloat(v)||0}
-function gSGs(){initYearData();return data[getYearKey()].savingsGoals||[]}
-function getTotalGoal(){var goals=gSGs(),t=0;for(var i=0;i<goals.length;i++)t+=(parseFloat(goals[i].goal)||0);return t}
-function getGoalForAccount(name){var goals=gSGs();for(var i=0;i<goals.length;i++){if(goals[i].account===name)return parseFloat(goals[i].goal)||0}return 0}
-function getSoldeForAccount(name){
-  var accountTotals=getSavingsAccountTotals();
-  var acct=accountTotals[name]||{total:0};
-  var provInflow=getTotalProvisionInflowForAccount(name);
-  var totalPreleve=getTotalPreleveForAccount(name);
-  return acct.total+provInflow-totalPreleve;
-}
 
 function isCarryoverEnabled(){initYearData();return data[getYearKey()].carryoverEnabled!==false}
 function setCarryoverEnabled(v){initYearData();data[getYearKey()].carryoverEnabled=!!v;saveToStorage();renderTabs();renderContent()}
@@ -992,10 +963,10 @@ function buildAnnualRow(idx,row,len){
   h+='</select></div><div class="row-delete"><button onclick="deleteAnnualExpense('+idx+')"><i class="fas fa-xmark"></i></button></div></div>';
   return h;
 }
+
 // ===== SAVINGS PAGE =====
 function renderSavingsPage(){
   var ts=gTSY(),goal=gSG(),avg=ts/12,gPct=goal>0?Math.min(100,(ts/goal)*100):0;
-  var ts=gTSY(),totalGoal=getTotalGoal(),avg=ts/12,gPct=totalGoal>0?Math.min(100,(ts/totalGoal)*100):0;
   var mSav=[],mxS=0;for(var si=0;si<12;si++){var sv=gMS(si);mSav.push(sv);if(sv>mxS)mxS=sv}
   var h='<div class="savings-summary">';
   h+='<div class="summary-card savings-card"><div class="label">Total épargné</div><div class="value">'+fmt(ts)+'</div></div>';
@@ -1004,52 +975,7 @@ function renderSavingsPage(){
 
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-bullseye"></i></span>Objectif annuel</div></div><div class="savings-goal-section"><div class="savings-goal-row"><label>Montant cible :</label><input type="number" inputmode="decimal" value="'+(goal||'')+'" placeholder="Ex: 5000" onfocus="this.select()" onchange="updateGoal(this.value)"></div>';
   if(goal>0){h+='<div class="savings-goal-bar"><div class="savings-goal-fill" style="width:'+gPct+'%"></div></div><div class="savings-goal-pct">'+fmt(ts)+' / '+fmt(goal)+' — '+gPct.toFixed(1)+'%</div>'}
-  h+='<div class="summary-card'+(totalGoal>0?' savings-card':'')+'"><div class="label">Objectifs</div><div class="value"'+(totalGoal<=0?' style="color:var(--text-muted)"':'')+'>'+(totalGoal>0?fmt(totalGoal):'Non définis')+'</div>';
-  if(totalGoal>0){h+='<div class="balance-bar"><div class="balance-bar-fill positive" style="width:'+gPct+'%;background:var(--savings)"></div></div>'}
   h+='</div></div>';
-
-  // Objectifs par compte
-  var goals=gSGs();
-  var accounts=getAllSavingsAccountNames();
-  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-bullseye"></i></span>Objectifs par compte</div>';
-  if(totalGoal>0){h+='<div class="section-total savings-total">'+gPct.toFixed(1)+'%</div>'}
-  h+='</div>';
-  // List existing goals
-  if(goals.length>0){
-    h+='<div class="goal-list">';
-    for(var gi=0;gi<goals.length;gi++){
-      var g=goals[gi], gAmt=parseFloat(g.goal)||0, gAcct=g.account||'';
-      var soldeAcct=gAcct?getSoldeForAccount(gAcct):ts;
-      var pctG=gAmt>0?Math.min(100,(soldeAcct/gAmt)*100):0;
-      var pctCls=pctG>=100?'var(--green)':'var(--savings)';
-      h+='<div class="goal-item">';
-      h+='<div class="goal-item-top">';
-      h+='<div class="goal-item-info">';
-      h+='<select class="compte-select" style="min-width:140px" onchange="updateGoalAccount('+gi+',this.value)">';
-      h+='<option value=""'+(!gAcct?' selected':'')+'>— Tous comptes —</option>';
-      for(var ga=0;ga<accounts.length;ga++){
-        h+='<option value="'+escapeAttr(accounts[ga])+'"'+(accounts[ga]===gAcct?' selected':'')+'>'+escapeHtml(accounts[ga])+'</option>';
-      }
-      h+='</select>';
-      h+='</div>';
-      h+='<div class="goal-item-amount"><input type="number" inputmode="decimal" value="'+(gAmt||'')+'" placeholder="Montant" onfocus="this.select()" onchange="updateGoalAmount('+gi+',this.value)" style="width:120px;border:1px solid var(--border);background:var(--input-bg);border-radius:8px;padding:7px 10px;font-family:Nunito,sans-serif;font-size:16px;font-weight:700;color:var(--savings);text-align:right;outline:none"></div>';
-      h+='<div class="row-delete"><button onclick="deleteGoal('+gi+')"><i class="fas fa-xmark"></i></button></div>';
-      h+='</div>';
-      if(gAmt>0){
-        h+='<div class="goal-item-progress">';
-        h+='<div class="savings-goal-bar"><div class="savings-goal-fill" style="width:'+pctG+'%;background:linear-gradient(90deg,var(--savings),'+pctCls+')"></div></div>';
-        h+='<div class="goal-item-stats"><span style="color:var(--savings);font-weight:700;font-size:12px">'+fmt(soldeAcct)+' / '+fmt(gAmt)+'</span>';
-        h+='<span style="font-weight:800;font-size:13px;color:'+pctCls+'">'+pctG.toFixed(1)+'%</span></div>';
-        h+='</div>';
-      }
-      h+='</div>';
-    }
-    h+='</div>';
-  } else {
-    h+='<div class="empty-state"><i class="fas fa-bullseye"></i><p>Aucun objectif défini. Ajoutez-en un ci-dessous.</p></div>';
-  }
-  h+='<button class="add-savings-btn" onclick="addGoal()"><i class="fas fa-plus"></i> Ajouter un objectif</button>';
-  h+='</div>';
 
   // Per-account totals with provisions integrated
   var accountTotals=getSavingsAccountTotals();
@@ -1095,7 +1021,6 @@ function renderSavingsPage(){
   h+='</div>';
   document.getElementById('mainContent').innerHTML=h;
   drawSavingsChart(mSav,goal);
-  drawSavingsChart(mSav,totalGoal);
 }
 
 function createSavingsAccount(){
