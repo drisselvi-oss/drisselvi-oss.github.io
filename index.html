@@ -355,13 +355,17 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
     <div style="display:flex;align-items:center;gap:10px">
       <div class="year-selector">
         <button class="year-btn" onclick="changeYear(-1)"><i class="fas fa-chevron-left"></i></button>
-        <span id="yearDisplay">2025</span>
-        <button class="year-btn" onclick="changeYear(1)"><i class="fas fa-chevron-right"></i></button>
-      </div>
-      <div class="header-actions">
-        <button class="btn-icon" onclick="exportData()" title="Exporter"><i class="fas fa-download"></i></button>
-        <button class="btn-icon" onclick="triggerImport()" title="Importer"><i class="fas fa-upload"></i></button>
-        <button class="btn-icon" onclick="showResetConfirm()" title="Réinitialiser"><i class="fas fa-rotate-left"></i></button>
+         <span id="yearDisplay">2025</span>        
+         <button class="year-btn" onclick="changeYear(1)"><i class="fas fa-chevron-right"></i></button>
+       </div>
+       <div class="carryover-toggle-area" style="display:flex;align-items:center;gap:5px" title="Report du solde du mois précédent">
+         <label class="toggle-switch"><input type="checkbox" id="carryoverToggle" onchange="setCarryoverEnabled(this.checked)"><span class="toggle-slider"></span></label>
+         <span style="font-size:10px;font-weight:700;color:var(--text-muted);line-height:1.1;max-width:50px">Report N-1</span>
+       </div>
+       <div class="header-actions">
+         <button class="btn-icon" onclick="exportData()" title="Exporter"><i class="fas fa-download"></i></button>
+         <button class="btn-icon" onclick="triggerImport()" title="Importer"><i class="fas fa-upload"></i></button>
+		<button class="btn-icon" onclick="showResetConfirm()" title="Réinitialiser"><i class="fas fa-rotate-left"></i></button>
       </div>
     </div>
   </div>
@@ -401,6 +405,7 @@ function initYearData(){
   var yd=data[key];
   if(typeof yd.savingsGoal==='undefined') yd.savingsGoal=0;
   if(!yd.savingsAccounts) yd.savingsAccounts=[];
+  if(typeof yd.carryoverEnabled==='undefined') yd.carryoverEnabled=true;
   for(var j=0;j<12;j++){
     var md=yd.months[j];
     if(!md.savingsLines){
@@ -434,23 +439,30 @@ function gAE(){initYearData();return data[getYearKey()].annualExpenses}
 function gSG(){initYearData();return data[getYearKey()].savingsGoal||0}
 function sSG(v){initYearData();data[getYearKey()].savingsGoal=parseFloat(v)||0}
 
+function isCarryoverEnabled(){initYearData();return data[getYearKey()].carryoverEnabled!==false}
+function setCarryoverEnabled(v){initYearData();data[getYearKey()].carryoverEnabled=!!v;saveToStorage();renderTabs();renderContent()}
+
 function gAFM(mi){return gAE().filter(function(a){return a.month===mi})}
 function gATFM_prevu(mi){return gAFM(mi).reduce(function(s,a){return s+(parseFloat(a.prevu)||0)},0)}
 function gATFM_preleve(mi){return gAFM(mi).reduce(function(s,a){return s+(parseFloat(a.preleve)||0)},0)}
 
+// Only include annual expenses that directly impact monthly balance:
+// - dueMonth === 0 (January, no provisions) AND no savings account assigned
+// If a compte is assigned, the preleve comes from the savings account, not the monthly balance
 function gATFM_prevu_noProv(mi){
   return gAFM(mi).reduce(function(s,a){
     if(a.month===0) return s+(parseFloat(a.prevu)||0);
+    if(a.month===0 && !a.compte) return s+(parseFloat(a.prevu)||0);
     return s;
   },0);
 }
 function gATFM_preleve_noProv(mi){
   return gAFM(mi).reduce(function(s,a){
     if(a.month===0) return s+(parseFloat(a.preleve)||0);
+    if(a.month===0 && !a.compte) return s+(parseFloat(a.preleve)||0);
     return s;
   },0);
 }
-
 function gTI(m){return gM(m).income.reduce(function(s,r){return s+(parseFloat(r.amount)||0)},0)}
 function gTE(m){return gM(m).expenses.reduce(function(s,r){return s+(parseFloat(r.amount)||0)},0)}
 
@@ -536,6 +548,7 @@ function getTotalProvisionInflowForAccount(accountName){
 
 // ===== SOLDE MOIS PRECEDENT =====
 function getCarryoverFromPrevMonth(m){
+  if(!isCarryoverEnabled()) return 0;
   if(m===0) {
     var prevKey='y'+(currentYear-1);
     if(data[prevKey] && data[prevKey].months){
@@ -560,6 +573,15 @@ function computeBalActualFull(m, year){
     }
   } else {
     carry=computeBalActualFull(m-1, year);
+  if(isCarryoverEnabled()){
+    if(m===0){
+      var prevKey='y'+(year-1);
+      if(data[prevKey] && data[prevKey].months){
+        carry=computeBalActualFull(11, year-1);
+      }
+    } else {
+      carry=computeBalActualFull(m-1, year);
+    }
   }
   currentYear=savedYear;
   initYearData();
@@ -1252,11 +1274,13 @@ function deleteAnnualExpense(idx){showConfirmDialog('Supprimer cette dépense an
 
 // ===== YEAR =====
 function changeYear(d){currentYear+=d;document.getElementById('yearDisplay').textContent=currentYear;initYearData();renderTabs();renderContent()}
+function changeYear(d){currentYear+=d;document.getElementById('yearDisplay').textContent=currentYear;initYearData();syncCarryoverToggle();renderTabs();renderContent()}
 
 // ===== EXPORT / IMPORT =====
 function exportData(){var b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='budget_'+currentYear+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);showToast('fa-check-circle','Données exportées')}
 function triggerImport(){document.getElementById('fileInput').click()}
 function importData(event){var f=event.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){try{var imp=JSON.parse(e.target.result);if(typeof imp==='object'&&imp!==null){data=imp;var k=Object.keys(data);if(k.length>0){currentYear=parseInt(k[0].substring(1),10);document.getElementById('yearDisplay').textContent=currentYear}saveToStorage();renderTabs();renderContent();showToast('fa-check-circle','Données importées')}}catch(err){showToast('fa-exclamation-triangle','Fichier invalide')}};r.readAsText(f);event.target.value=''}
+function importData(event){var f=event.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){try{var imp=JSON.parse(e.target.result);if(typeof imp==='object'&&imp!==null){data=imp;var k=Object.keys(data);if(k.length>0){currentYear=parseInt(k[0].substring(1),10);document.getElementById('yearDisplay').textContent=currentYear}saveToStorage();initYearData();syncCarryoverToggle();renderTabs();renderContent();showToast('fa-check-circle','Données importées')}}catch(err){showToast('fa-exclamation-triangle','Fichier invalide')}};r.readAsText(f);event.target.value=''}
 function showResetConfirm(){showConfirmDialog('Réinitialiser ?','Données de '+currentYear+' effacées.',function(){delete data[getYearKey()];initYearData();saveToStorage();renderTabs();renderContent();showToast('fa-rotate-left','Données réinitialisées')})}
 
 // ===== MODAL / TOAST =====
@@ -1304,9 +1328,11 @@ function escapeHtml(s){var d=document.createElement('div');d.appendChild(documen
 function escapeAttr(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 // ===== INIT =====
+function syncCarryoverToggle(){var cb=document.getElementById('carryoverToggle');if(cb)cb.checked=isCarryoverEnabled()}
 var didLoad=loadFromStorage();
 if(didLoad){var sk=Object.keys(data);if(sk.length>0){var yrs=sk.map(function(k){return parseInt(k.substring(1),10)}).sort();currentYear=yrs[yrs.length-1];document.getElementById('yearDisplay').textContent=currentYear}}
 initYearData();renderTabs();renderContent();
+initYearData();syncCarryoverToggle();renderTabs();renderContent();
 </script>
 </body>
 </html>
