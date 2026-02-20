@@ -144,10 +144,10 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
 .add-row-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px;border:none;background:transparent;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--accent);cursor:pointer;transition:all .2s}
 .add-row-btn:hover{background:var(--accent-light)}
 /* Annual rows */
-.annual-row{display:grid;grid-template-columns:28px 1fr 110px 95px 95px 80px 90px 32px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);transition:background .15s;gap:4px}
+.annual-row{display:grid;grid-template-columns:28px 1fr 110px 95px 95px 80px 55px 90px 32px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);transition:background .15s;gap:4px}
 .annual-row:last-child{border-bottom:none}
 .annual-row:hover{background:var(--input-bg)}
-.annual-col-headers{display:grid;grid-template-columns:28px 1fr 110px 95px 95px 80px 90px 32px;padding:4px 14px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted);gap:4px;border-bottom:1px solid var(--border)}
+.annual-col-headers{display:grid;grid-template-columns:28px 1fr 110px 95px 95px 80px 55px 90px 32px;padding:4px 14px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted);gap:4px;border-bottom:1px solid var(--border)}
 .annual-col-headers span:nth-child(4),.annual-col-headers span:nth-child(5),.annual-col-headers span:nth-child(6){text-align:right}
 .month-select{padding:7px 8px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;color:var(--text-primary);outline:none;cursor:pointer;width:100%}
 .month-select:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-light)}
@@ -307,8 +307,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
 .annual-summary-5 .summary-card .value.diff-neg{color:var(--red)}
 /* Responsive */
 @media(max-width:900px){
-  .annual-row{grid-template-columns:24px 1fr 90px 80px 80px 65px 75px 28px;padding:6px 8px;gap:3px}
-  .annual-col-headers{grid-template-columns:24px 1fr 90px 80px 80px 65px 75px 28px;padding:4px 8px;gap:3px}
+  .annual-row{grid-template-columns:24px 1fr 90px 80px 80px 65px 48px 75px 28px;padding:6px 8px;gap:3px}
+  .annual-col-headers{grid-template-columns:24px 1fr 90px 80px 80px 65px 48px 75px 28px;padding:4px 8px;gap:3px}
   .annual-summary-5{grid-template-columns:repeat(3,1fr)}
   .account-table-header{grid-template-columns:36px 1fr 75px 75px 75px 75px 32px !important;padding:8px 12px;font-size:10px}
   .account-table-row{grid-template-columns:36px 1fr 75px 75px 75px 75px 32px !important;padding:10px 12px}
@@ -356,6 +356,15 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
 .section{animation:fadeIn .35s ease forwards}
 .section:nth-child(2){animation-delay:.05s}.section:nth-child(3){animation-delay:.1s}
 .section:nth-child(4){animation-delay:.15s}.section:nth-child(5){animation-delay:.2s}
+/* Goal items */
+.goal-list{padding:0 18px 12px}
+.goal-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.goal-item:last-child{border-bottom:none}
+.goal-item-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.goal-item-info{flex:1;min-width:140px}
+.goal-item-amount{display:flex;align-items:center;gap:6px}
+.goal-item-progress{margin-top:8px}
+.goal-item-stats{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
 </style>
 </head>
 <body>
@@ -404,7 +413,7 @@ function getYearKey(){return 'y'+currentYear}
 function initYearData(){
   var key=getYearKey();
   if(!data[key]){
-    data[key]={months:[],annualExpenses:[],savingsGoal:0,savingsAccounts:[]};
+    data[key]={months:[],annualExpenses:[],savingsGoals:[],savingsAccounts:[]};
     for(var i=0;i<12;i++) data[key].months.push({
       income:JSON.parse(JSON.stringify(DEF_INCOME)),
       expenses:JSON.parse(JSON.stringify(DEF_EXPENSES)),
@@ -413,7 +422,12 @@ function initYearData(){
     });
   }
   var yd=data[key];
-  if(typeof yd.savingsGoal==='undefined') yd.savingsGoal=0;
+  // Migrate old single savingsGoal to new savingsGoals array
+  if(!yd.savingsGoals) yd.savingsGoals=[];
+  if(typeof yd.savingsGoal==='number' && yd.savingsGoal>0){
+    yd.savingsGoals.push({account:'',goal:yd.savingsGoal});
+  }
+  delete yd.savingsGoal;
   if(!yd.savingsAccounts) yd.savingsAccounts=[];
   if(typeof yd.carryoverEnabled==='undefined') yd.carryoverEnabled=true;
   for(var j=0;j<12;j++){
@@ -442,13 +456,32 @@ function initYearData(){
     }
     if(typeof ae.compte==='undefined') ae.compte='';
     if(!ae.provDone) ae.provDone={};
+    if(typeof ae.nbYears==='undefined') ae.nbYears=1;
+    // Migrate provDone numeric keys to year_month format
+    var _pd={},_needsMig=false;
+    for(var pk in ae.provDone){
+      if(ae.provDone.hasOwnProperty(pk)){
+        if(String(pk).indexOf('_')===-1){
+          _pd[currentYear+'_'+pk]=ae.provDone[pk];_needsMig=true;
+        } else { _pd[pk]=ae.provDone[pk]; }
+      }
+    }
+    if(_needsMig) ae.provDone=_pd;
   }
 }
 
 function gM(m){initYearData();return data[getYearKey()].months[m]}
 function gAE(){initYearData();return data[getYearKey()].annualExpenses}
-function gSG(){initYearData();return data[getYearKey()].savingsGoal||0}
-function sSG(v){initYearData();data[getYearKey()].savingsGoal=parseFloat(v)||0}
+function gSGs(){initYearData();return data[getYearKey()].savingsGoals||[]}
+function getTotalGoal(){var goals=gSGs(),t=0;for(var i=0;i<goals.length;i++)t+=(parseFloat(goals[i].goal)||0);return t}
+function getGoalForAccount(name){var goals=gSGs();for(var i=0;i<goals.length;i++){if(goals[i].account===name)return parseFloat(goals[i].goal)||0}return 0}
+function getSoldeForAccount(name){
+  var accountTotals=getSavingsAccountTotals();
+  var acct=accountTotals[name]||{total:0};
+  var provInflow=getTotalProvisionInflowForAccount(name);
+  var totalPreleve=getTotalPreleveForAccount(name);
+  return acct.total+provInflow-totalPreleve;
+}
 
 function isCarryoverEnabled(){initYearData();return data[getYearKey()].carryoverEnabled!==false}
 function setCarryoverEnabled(v){initYearData();data[getYearKey()].carryoverEnabled=!!v;saveToStorage();renderTabs();renderContent()}
@@ -498,75 +531,126 @@ function gVF(m){return gM(m).variableExpenses.reduce(function(s,r){return s+(par
 function gVA(m){return gM(m).variableExpenses.reduce(function(s,r){return s+(parseFloat(r.actual)||0)},0)}
 
 // Provision — monthly amounts saved toward annual expenses
-// Lissage dynamique: recalcule en fonction de ce qui a déjà été provisionné (provDone)
-// et du solde du compte épargne choisi
+// Lissage dynamique multi-annuel: recalcule en fonction de nbYears, provDone, et solde compte
 function gAPFM(mi){
-  var annuals=gAE(),total=0,details=[];
-  for(var i=0;i<annuals.length;i++){
-    var a=annuals[i],dm=a.month,amt=parseFloat(a.prevu)||0;
-    if(amt<=0||dm===0)continue;
-    if(mi<dm){
-      var provDone=a.provDone||{};
-      // Somme de ce qui a déjà été provisionné (mois cochés avant mi)
-      var totalDone=0;
-      for(var pm=0;pm<mi;pm++){
-        if(provDone[pm]) totalDone+=provDone[pm];
+  var total=0,details=[];
+  var curGlobal=currentYear*12+mi;
+
+  function processExp(a, expYear, annualIdx){
+    var dm=a.month,amt=parseFloat(a.prevu)||0,nb=parseInt(a.nbYears)||1;
+    if(amt<=0) return;
+    var totalProvMonths=(nb-1)*12+dm;
+    if(totalProvMonths<=0) return;
+    var dueGlobal=expYear*12+dm;
+    var startGlobal=dueGlobal-totalProvMonths;
+    if(curGlobal<startGlobal||curGlobal>=dueGlobal) return;
+
+    var provDone=a.provDone||{};
+    var totalDone=0;
+    for(var pk in provDone){
+      if(!provDone.hasOwnProperty(pk)) continue;
+      var parts=String(pk).split('_'),pGlobal;
+      if(parts.length===2) pGlobal=parseInt(parts[0])*12+parseInt(parts[1]);
+      else pGlobal=expYear*12+parseInt(pk);
+      if(pGlobal>=startGlobal&&pGlobal<curGlobal) totalDone+=provDone[pk];
+    }
+
+    var accountCredit=0;
+    if(a.compte){
+      // Épargne du compte dans l'année courante avant le mois courant
+      var yd=data[getYearKey()];
+      for(var sm=0;sm<mi;sm++){
+        var lines=yd.months[sm].savingsLines;
+        for(var sl=0;sl<lines.length;sl++){
+          if((lines[sl].label||'')===a.compte) accountCredit+=(parseFloat(lines[sl].amount)||0);
+        }
       }
-      // Si un compte épargne est assigné, prendre en compte son solde existant
-      // (épargne directe + provisions déjà cochées - prélèvements passés)
-      var accountCredit=0;
-      if(a.compte){
-        // Solde du compte depuis les lignes d'épargne (hors provisions)
-        var yd=data[getYearKey()];
-        for(var sm=0;sm<mi;sm++){
-          var lines=yd.months[sm].savingsLines;
-          for(var sl=0;sl<lines.length;sl++){
-            if((lines[sl].label||'')===a.compte){
-              accountCredit+=(parseFloat(lines[sl].amount)||0);
+      // Épargne des années précédentes dans la fenêtre de lissage
+      var provStartYear=expYear-nb+1;
+      for(var py=provStartYear;py<currentYear;py++){
+        var pyKey='y'+py;
+        if(data[pyKey]&&data[pyKey].months){
+          for(var pm2=0;pm2<12;pm2++){
+            var pLines=data[pyKey].months[pm2].savingsLines;
+            for(var psl=0;psl<pLines.length;psl++){
+              if((pLines[psl].label||'')===a.compte) accountCredit+=(parseFloat(pLines[psl].amount)||0);
             }
           }
         }
-        // Répartir le crédit du compte au prorata entre toutes les dépenses annuelles du même compte
-        var sameAccountTotal=0;
-        for(var sa=0;sa<annuals.length;sa++){
-          if((annuals[sa].compte||'')===a.compte && (parseFloat(annuals[sa].prevu)||0)>0 && annuals[sa].month>0){
-            sameAccountTotal+=(parseFloat(annuals[sa].prevu)||0);
-          }
-        }
-        if(sameAccountTotal>0) accountCredit=accountCredit*(amt/sameAccountTotal);
-        else accountCredit=0;
       }
-      var remaining=Math.max(0, amt - totalDone - accountCredit);
-      var remainingMonths=dm-mi;
-      var mc=remainingMonths>0?remaining/remainingMonths:0;
-      var isChecked=!!provDone[mi];
-      total+=mc;
-      details.push({label:a.label||'Dépense annuelle',monthlyAmount:mc,fullAmount:amt,dueMonth:dm,monthsToSave:remainingMonths,compte:a.compte||'',annualIdx:i,isChecked:isChecked,totalDone:totalDone,accountCredit:accountCredit});
+      // Prorata entre dépenses du même compte
+      var expAnnuals=(data['y'+expYear]&&data['y'+expYear].annualExpenses)||[];
+      var sameAcctTot=0;
+      for(var sa=0;sa<expAnnuals.length;sa++){
+        if((expAnnuals[sa].compte||'')===a.compte&&(parseFloat(expAnnuals[sa].prevu)||0)>0){
+          sameAcctTot+=(parseFloat(expAnnuals[sa].prevu)||0);
+        }
+      }
+      if(sameAcctTot>0) accountCredit=accountCredit*(amt/sameAcctTot);
+      else accountCredit=0;
+    }
+
+    var remaining=Math.max(0,amt-totalDone-accountCredit);
+    var remainingMonths=dueGlobal-curGlobal;
+    var mc=remainingMonths>0?remaining/remainingMonths:0;
+    var curKey=currentYear+'_'+mi;
+    var isChecked=!!provDone[curKey];
+    total+=mc;
+    details.push({label:a.label||'Dépense annuelle',monthlyAmount:mc,fullAmount:amt,dueMonth:dm,dueYear:expYear,nbYears:nb,monthsToSave:remainingMonths,compte:a.compte||'',annualIdx:annualIdx,expenseYear:expYear,isChecked:isChecked,totalDone:totalDone,accountCredit:accountCredit});
+  }
+
+  // Dépenses de l'année courante
+  var annuals=gAE();
+  for(var i=0;i<annuals.length;i++) processExp(annuals[i],currentYear,i);
+  // Dépenses d'années futures avec lissage multi-annuel
+  for(var fy=currentYear+1;fy<=currentYear+10;fy++){
+    var fKey='y'+fy;
+    if(data[fKey]&&data[fKey].annualExpenses){
+      var fa=data[fKey].annualExpenses;
+      for(var fi=0;fi<fa.length;fi++){
+        var fnb=parseInt(fa[fi].nbYears)||1;
+        if(fnb>1&&fy-fnb+1<=currentYear) processExp(fa[fi],fy,fi);
+      }
     }
   }
   return{total:total,details:details};
 }
 function gPTFM(mi){return gAPFM(mi).total}
 
-function getProvisionForAccount(accountName, mi){
-  var annuals=gAE(),total=0;
+function _collectAnnualsWithAccount(accountName){
+  var result=[];
+  var annuals=gAE();
   for(var i=0;i<annuals.length;i++){
-    var a=annuals[i],dm=a.month,amt=parseFloat(a.prevu)||0;
-    if(amt<=0||dm===0)continue;
-    if((a.compte||'')!==accountName) continue;
-    // Seuls les mois cochés (provDone) comptent comme contributions réelles
-    var provDone=a.provDone||{};
-    if(provDone[mi]) total+=provDone[mi];
-    if(mi===dm){total-=(parseFloat(a.preleve)||0)}
+    if((annuals[i].compte||'')===accountName) result.push({a:annuals[i],expYear:currentYear});
+  }
+  for(var fy=currentYear+1;fy<=currentYear+10;fy++){
+    var fKey='y'+fy;
+    if(data[fKey]&&data[fKey].annualExpenses){
+      var fa=data[fKey].annualExpenses;
+      for(var fi=0;fi<fa.length;fi++){
+        var fnb=parseInt(fa[fi].nbYears)||1;
+        if(fnb>1&&fy-fnb+1<=currentYear&&(fa[fi].compte||'')===accountName)
+          result.push({a:fa[fi],expYear:fy});
+      }
+    }
+  }
+  return result;
+}
+
+function getProvisionForAccount(accountName, mi){
+  var items=_collectAnnualsWithAccount(accountName),total=0;
+  var curKey=currentYear+'_'+mi;
+  for(var i=0;i<items.length;i++){
+    var a=items[i].a,provDone=a.provDone||{};
+    if(provDone[curKey]) total+=provDone[curKey];
+    if(items[i].expYear===currentYear&&mi===a.month) total-=(parseFloat(a.preleve)||0);
   }
   return total;
 }
 
 function getProvisionCumulForAccount(accountName, upToMonth){
   var total=0;
-  for(var m=0;m<=upToMonth;m++){
-    total+=getProvisionForAccount(accountName, m);
-  }
+  for(var m=0;m<=upToMonth;m++) total+=getProvisionForAccount(accountName,m);
   return total;
 }
 
@@ -577,22 +661,21 @@ function getTotalProvisionsForAccount(accountName){
 function getTotalPreleveForAccount(accountName){
   var annuals=gAE(),total=0;
   for(var i=0;i<annuals.length;i++){
-    if((annuals[i].compte||'')===accountName){
-      total+=(parseFloat(annuals[i].preleve)||0);
-    }
+    if((annuals[i].compte||'')===accountName) total+=(parseFloat(annuals[i].preleve)||0);
   }
   return total;
 }
 
 function getTotalProvisionInflowForAccount(accountName){
-  var annuals=gAE(),total=0;
-  for(var i=0;i<annuals.length;i++){
-    var a=annuals[i];
-    if((a.compte||'')!==accountName) continue;
-    // Seules les provisions effectivement cochées comptent
-    var provDone=a.provDone||{};
+  var items=_collectAnnualsWithAccount(accountName),total=0;
+  for(var i=0;i<items.length;i++){
+    var provDone=items[i].a.provDone||{};
     for(var pm in provDone){
-      if(provDone.hasOwnProperty(pm)) total+=provDone[pm];
+      if(!provDone.hasOwnProperty(pm)) continue;
+      // Ne compter que les provisions de l'année courante ou avant
+      var parts=String(pm).split('_');
+      if(parts.length===2){if(parseInt(parts[0])<=currentYear) total+=provDone[pm];}
+      else total+=provDone[pm];
     }
   }
   return total;
@@ -810,16 +893,18 @@ function renderMonthPage(m){
   // Provision with checkboxes
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon provision-icon"><i class="fas fa-vault"></i></span>Épargne dép. annuelles</div><div class="section-total provision-total">'+fmt(pt)+'</div></div>';
   if(prov.details.length===0){h+='<div class="empty-state"><i class="fas fa-check-circle"></i><p>Aucun provisionnement ce mois.</p></div>';}
-  else{for(var p=0;p<prov.details.length;p++){var pr=prov.details[p],rm=pr.dueMonth-m;
+  else{for(var p=0;p<prov.details.length;p++){var pr=prov.details[p],rm=pr.monthsToSave;
     var provPct=pr.fullAmount>0?Math.min(100,((pr.totalDone+pr.accountCredit)/pr.fullAmount)*100):0;
     var checkedCls=pr.isChecked?' prov-checked':'';
+    var dueLabel=MONTHS[pr.dueMonth]+(pr.dueYear!==currentYear?' '+pr.dueYear:'');
+    var multiYrBadge=pr.nbYears>1?' <small style="color:var(--annual-badge);font-weight:800">'+pr.nbYears+' ans</small>':'';
     h+='<div class="budget-row provision-row'+checkedCls+'">';
-    h+='<div class="row-label"><div class="provision-detail-label"><span class="prov-name">'+(pr.isChecked?'<i class="fas fa-check" style="font-size:10px;margin-right:4px"></i>':'')+escapeHtml(pr.label)+(pr.compte?' <small style="color:var(--savings);font-weight:800">\u2192 '+escapeHtml(pr.compte)+'</small>':'')+'</span>';
-    h+='<span class="prov-meta">'+fmt(pr.fullAmount)+' en '+MONTHS[pr.dueMonth]+' — encore '+rm+' mois · provisionné '+fmt(pr.totalDone+pr.accountCredit)+' / '+fmt(pr.fullAmount)+'</span>';
+    h+='<div class="row-label"><div class="provision-detail-label"><span class="prov-name">'+(pr.isChecked?'<i class="fas fa-check" style="font-size:10px;margin-right:4px"></i>':'')+escapeHtml(pr.label)+multiYrBadge+(pr.compte?' <small style="color:var(--savings);font-weight:800">\u2192 '+escapeHtml(pr.compte)+'</small>':'')+'</span>';
+    h+='<span class="prov-meta">'+fmt(pr.fullAmount)+' en '+dueLabel+' — encore '+rm+' mois · provisionné '+fmt(pr.totalDone+pr.accountCredit)+' / '+fmt(pr.fullAmount)+'</span>';
     h+='<div class="prov-progress"><div class="prov-progress-fill" style="width:'+provPct+'%"></div></div>';
     h+='</div></div>';
     h+='<div class="row-amount"><div class="auto-value">'+fmt(pr.monthlyAmount)+'</div></div>';
-    h+='<div class="prov-check-cell"><label class="toggle-switch"><input type="checkbox"'+(pr.isChecked?' checked':'')+' onchange="toggleProvision('+pr.annualIdx+','+m+',this.checked,'+pr.monthlyAmount+')"><span class="toggle-slider prov-slider"></span></label>';
+    h+='<div class="prov-check-cell"><label class="toggle-switch"><input type="checkbox"'+(pr.isChecked?' checked':'')+' onchange="toggleProvision('+pr.expenseYear+','+pr.annualIdx+','+m+',this.checked,'+pr.monthlyAmount+')"><span class="toggle-slider prov-slider"></span></label>';
     h+='<div class="toggle-hint'+(pr.isChecked?' done':'')+'">'+(pr.isChecked?'Fait':'À faire')+'</div></div>';
     h+='</div>';}}
   h+='</div>';
@@ -933,7 +1018,7 @@ function renderAnnualPage(){
   h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon annual-icon"><i class="fas fa-calendar-alt"></i></span>Dépenses annuelles</div><div class="section-total annual-total">'+fmt(tPrevu)+'</div></div>';
   if(annuals.length===0){h+='<div class="empty-state"><i class="fas fa-calendar-plus"></i><p>Aucune dépense annuelle.</p></div>';}
   else{
-    h+='<div class="annual-col-headers"><span></span><span>Intitulé</span><span>Compte</span><span style="text-align:right">Prévu</span><span style="text-align:right">Prélevé</span><span style="text-align:right">Diff.</span><span>Mois</span><span></span></div>';
+    h+='<div class="annual-col-headers"><span></span><span>Intitulé</span><span>Compte</span><span style="text-align:right">Prévu</span><span style="text-align:right">Prélevé</span><span style="text-align:right">Diff.</span><span style="text-align:center">Ans</span><span>Mois</span><span></span></div>';
     for(var ai=0;ai<annuals.length;ai++)h+=buildAnnualRow(ai,annuals[ai],annuals.length);
   }
   h+='<button class="add-row-btn" onclick="addAnnualExpense()"><i class="fas fa-plus"></i> Ajouter une dépense annuelle</button></div>';
@@ -958,24 +1043,68 @@ function buildAnnualRow(idx,row,len){
   h+='<div class="row-amount"><input type="number" inputmode="decimal" class="prevu-input" value="'+(prevu||'')+'" placeholder="0" onfocus="this.select()" onchange="updateAnnualPrevu('+idx+',this.value)"></div>';
   h+='<div class="row-amount"><input type="number" inputmode="decimal" class="preleve-input" value="'+(preleve||'')+'" placeholder="0" onfocus="this.select()" onchange="updateAnnualPreleve('+idx+',this.value)"></div>';
   h+='<div class="diff-value '+diffCls+'">'+fmt(diff)+'</div>';
+  var nb=parseInt(row.nbYears)||1;
+  h+='<div><select class="month-select" style="text-align:center;padding:7px 4px;font-size:13px" onchange="updateAnnualNbYears('+idx+',this.value)">';
+  for(var ny=1;ny<=5;ny++){h+='<option value="'+ny+'"'+(ny===nb?' selected':'')+'>'+ny+'</option>'}
+  h+='</select></div>';
   h+='<div><select class="month-select" onchange="updateAnnualMonth('+idx+',this.value)">';
   for(var sm=0;sm<12;sm++){h+='<option value="'+sm+'"'+(sm===row.month?' selected':'')+'>'+MONTHS_SHORT[sm]+'</option>'}
   h+='</select></div><div class="row-delete"><button onclick="deleteAnnualExpense('+idx+')"><i class="fas fa-xmark"></i></button></div></div>';
   return h;
 }
-
 // ===== SAVINGS PAGE =====
 function renderSavingsPage(){
-  var ts=gTSY(),goal=gSG(),avg=ts/12,gPct=goal>0?Math.min(100,(ts/goal)*100):0;
+  var ts=gTSY(),totalGoal=getTotalGoal(),avg=ts/12,gPct=totalGoal>0?Math.min(100,(ts/totalGoal)*100):0;
   var mSav=[],mxS=0;for(var si=0;si<12;si++){var sv=gMS(si);mSav.push(sv);if(sv>mxS)mxS=sv}
   var h='<div class="savings-summary">';
   h+='<div class="summary-card savings-card"><div class="label">Total épargné</div><div class="value">'+fmt(ts)+'</div></div>';
   h+='<div class="summary-card savings-card"><div class="label">Moyenne / mois</div><div class="value">'+fmt(avg)+'</div></div>';
-  h+='<div class="summary-card'+(goal>0?' savings-card':'')+'"><div class="label">Objectif</div><div class="value"'+(goal<=0?' style="color:var(--text-muted)"':'')+'>'+  (goal>0?fmt(goal):'Non défini')+'</div></div></div>';
-
-  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-bullseye"></i></span>Objectif annuel</div></div><div class="savings-goal-section"><div class="savings-goal-row"><label>Montant cible :</label><input type="number" inputmode="decimal" value="'+(goal||'')+'" placeholder="Ex: 5000" onfocus="this.select()" onchange="updateGoal(this.value)"></div>';
-  if(goal>0){h+='<div class="savings-goal-bar"><div class="savings-goal-fill" style="width:'+gPct+'%"></div></div><div class="savings-goal-pct">'+fmt(ts)+' / '+fmt(goal)+' — '+gPct.toFixed(1)+'%</div>'}
+  h+='<div class="summary-card'+(totalGoal>0?' savings-card':'')+'"><div class="label">Objectifs</div><div class="value"'+(totalGoal<=0?' style="color:var(--text-muted)"':'')+'>'+(totalGoal>0?fmt(totalGoal):'Non définis')+'</div>';
+  if(totalGoal>0){h+='<div class="balance-bar"><div class="balance-bar-fill positive" style="width:'+gPct+'%;background:var(--savings)"></div></div>'}
   h+='</div></div>';
+
+  // Objectifs par compte
+  var goals=gSGs();
+  var accounts=getAllSavingsAccountNames();
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon savings-icon"><i class="fas fa-bullseye"></i></span>Objectifs par compte</div>';
+  if(totalGoal>0){h+='<div class="section-total savings-total">'+gPct.toFixed(1)+'%</div>'}
+  h+='</div>';
+  // List existing goals
+  if(goals.length>0){
+    h+='<div class="goal-list">';
+    for(var gi=0;gi<goals.length;gi++){
+      var g=goals[gi], gAmt=parseFloat(g.goal)||0, gAcct=g.account||'';
+      var soldeAcct=gAcct?getSoldeForAccount(gAcct):ts;
+      var pctG=gAmt>0?Math.min(100,(soldeAcct/gAmt)*100):0;
+      var pctCls=pctG>=100?'var(--green)':'var(--savings)';
+      h+='<div class="goal-item">';
+      h+='<div class="goal-item-top">';
+      h+='<div class="goal-item-info">';
+      h+='<select class="compte-select" style="min-width:140px" onchange="updateGoalAccount('+gi+',this.value)">';
+      h+='<option value=""'+(!gAcct?' selected':'')+'>— Tous comptes —</option>';
+      for(var ga=0;ga<accounts.length;ga++){
+        h+='<option value="'+escapeAttr(accounts[ga])+'"'+(accounts[ga]===gAcct?' selected':'')+'>'+escapeHtml(accounts[ga])+'</option>';
+      }
+      h+='</select>';
+      h+='</div>';
+      h+='<div class="goal-item-amount"><input type="number" inputmode="decimal" value="'+(gAmt||'')+'" placeholder="Montant" onfocus="this.select()" onchange="updateGoalAmount('+gi+',this.value)" style="width:120px;border:1px solid var(--border);background:var(--input-bg);border-radius:8px;padding:7px 10px;font-family:Nunito,sans-serif;font-size:16px;font-weight:700;color:var(--savings);text-align:right;outline:none"></div>';
+      h+='<div class="row-delete"><button onclick="deleteGoal('+gi+')"><i class="fas fa-xmark"></i></button></div>';
+      h+='</div>';
+      if(gAmt>0){
+        h+='<div class="goal-item-progress">';
+        h+='<div class="savings-goal-bar"><div class="savings-goal-fill" style="width:'+pctG+'%;background:linear-gradient(90deg,var(--savings),'+pctCls+')"></div></div>';
+        h+='<div class="goal-item-stats"><span style="color:var(--savings);font-weight:700;font-size:12px">'+fmt(soldeAcct)+' / '+fmt(gAmt)+'</span>';
+        h+='<span style="font-weight:800;font-size:13px;color:'+pctCls+'">'+pctG.toFixed(1)+'%</span></div>';
+        h+='</div>';
+      }
+      h+='</div>';
+    }
+    h+='</div>';
+  } else {
+    h+='<div class="empty-state"><i class="fas fa-bullseye"></i><p>Aucun objectif défini. Ajoutez-en un ci-dessous.</p></div>';
+  }
+  h+='<button class="add-savings-btn" onclick="addGoal()"><i class="fas fa-plus"></i> Ajouter un objectif</button>';
+  h+='</div>';
 
   // Per-account totals with provisions integrated
   var accountTotals=getSavingsAccountTotals();
@@ -1020,7 +1149,7 @@ function renderSavingsPage(){
   for(var ti2=0;ti2<12;ti2++){var sV=gMS(ti2),cu=gCS(ti2),hv=sV>0?' has-value':'';h+='<div class="savings-table-row'+hv+'"><span class="month-label">'+(ti2+1)+'</span><span class="month-name">'+MONTHS[ti2]+'</span><span class="sav-amount">'+(sV>0?fmt(sV):'—')+'</span><span class="sav-cumul">'+(cu>0?fmt(cu):'—')+'</span></div>'}
   h+='</div>';
   document.getElementById('mainContent').innerHTML=h;
-  drawSavingsChart(mSav,goal);
+  drawSavingsChart(mSav,totalGoal);
 }
 
 function createSavingsAccount(){
@@ -1140,13 +1269,21 @@ function renderRecapPage(){
   }
 
   var savLabels={};
+  var savExtLabels={};
   for(var m4=0;m4<12;m4++){
     var slArr=yd.months[m4].savingsLines;
     for(var s=0;s<slArr.length;s++){
       var lbl5=(slArr[s].label||'').trim()||'(sans nom)';
-      var key5='sav_'+lbl5;
-      if(!savLabels[key5]) savLabels[key5]={label:lbl5,months:new Array(12).fill(0)};
-      savLabels[key5].months[m4]+=(parseFloat(slArr[s].amount)||0);
+      var amt5=parseFloat(slArr[s].amount)||0;
+      if(slArr[s].deductFromBalance===false){
+        var key5e='savext_'+lbl5;
+        if(!savExtLabels[key5e]) savExtLabels[key5e]={label:lbl5,months:new Array(12).fill(0)};
+        savExtLabels[key5e].months[m4]+=amt5;
+      } else {
+        var key5='sav_'+lbl5;
+        if(!savLabels[key5]) savLabels[key5]={label:lbl5,months:new Array(12).fill(0)};
+        savLabels[key5].months[m4]+=amt5;
+      }
     }
   }
 
@@ -1161,6 +1298,7 @@ function renderRecapPage(){
   }
 
   pushCategory(incomeLabels,'Revenus','income','fa-arrow-down');
+  pushCategory(savExtLabels,'Épargne (hors solde)','income','fa-piggy-bank');
   pushCategory(expLabels,'Dépenses fixes','expense','fa-arrow-up');
   pushCategory(varLabels,'Dépenses variables','expense','fa-shuffle');
   pushCategory(annualLabels,'Dépenses annuelles','expense','fa-calendar-alt');
@@ -1370,15 +1508,17 @@ function deleteSavingsLine(m,idx){
 }
 
 // ===== PROVISION TOGGLE =====
-function toggleProvision(annualIdx, month, checked, amount){
-  initYearData();
-  var ae=gAE()[annualIdx];
+function toggleProvision(expenseYear, annualIdx, month, checked, amount){
+  var yearKey='y'+expenseYear;
+  if(!data[yearKey]||!data[yearKey].annualExpenses) return;
+  var ae=data[yearKey].annualExpenses[annualIdx];
   if(!ae) return;
   if(!ae.provDone) ae.provDone={};
+  var key=currentYear+'_'+month;
   if(checked){
-    ae.provDone[month]=parseFloat(amount)||0;
+    ae.provDone[key]=parseFloat(amount)||0;
   } else {
-    delete ae.provDone[month];
+    delete ae.provDone[key];
   }
   saveToStorage();renderTabs();renderContent();
   if(checked) showToast('fa-check-circle','Provision cochée — '+MONTHS[month]);
@@ -1386,13 +1526,17 @@ function toggleProvision(annualIdx, month, checked, amount){
 }
 
 // ===== ANNUAL EXPENSES =====
-function updateGoal(val){sSG(val);saveToStorage();renderContent()}
+function addGoal(){initYearData();data[getYearKey()].savingsGoals.push({account:'',goal:0});saveToStorage();renderContent()}
+function updateGoalAccount(idx,val){initYearData();data[getYearKey()].savingsGoals[idx].account=val;saveToStorage();renderContent()}
+function updateGoalAmount(idx,val){initYearData();data[getYearKey()].savingsGoals[idx].goal=parseFloat(val)||0;saveToStorage();renderContent()}
+function deleteGoal(idx){initYearData();data[getYearKey()].savingsGoals.splice(idx,1);saveToStorage();renderContent()}
 function updateAnnualLabel(idx,val){gAE()[idx].label=val;saveToStorage()}
 function updateAnnualPrevu(idx,val){gAE()[idx].prevu=parseFloat(val)||0;saveToStorage();renderTabs();renderContent()}
 function updateAnnualPreleve(idx,val){gAE()[idx].preleve=parseFloat(val)||0;saveToStorage();renderTabs();renderContent()}
 function updateAnnualMonth(idx,val){gAE()[idx].month=parseInt(val,10);saveToStorage();renderTabs();renderContent()}
 function updateAnnualCompte(idx,val){gAE()[idx].compte=val;saveToStorage();renderContent()}
-function addAnnualExpense(){gAE().push({label:'',prevu:0,preleve:0,month:0,compte:'',provDone:{}});saveToStorage();renderContent();var r=document.querySelectorAll('.annual-row .row-label input');if(r.length>0)r[r.length-1].focus()}
+function updateAnnualNbYears(idx,val){gAE()[idx].nbYears=parseInt(val,10)||1;saveToStorage();renderTabs();renderContent()}
+function addAnnualExpense(){gAE().push({label:'',prevu:0,preleve:0,month:0,compte:'',provDone:{},nbYears:1});saveToStorage();renderContent();var r=document.querySelectorAll('.annual-row .row-label input');if(r.length>0)r[r.length-1].focus()}
 function deleteAnnualExpense(idx){showConfirmDialog('Supprimer cette dépense annuelle ?','Elle sera retirée du mois correspondant.',function(){gAE().splice(idx,1);saveToStorage();renderTabs();renderContent()})}
 
 // ===== YEAR =====
