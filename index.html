@@ -370,7 +370,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
 <body>
 <div class="app-header">
   <div class="header-top">
-    <div class="logo"><div class="logo-icon"><i class="fas fa-wallet"></i></div><h1>Mon Budget</h1></div>
+    <div class="logo"><div class="logo-icon"><i class="fas fa-wallet"></i></div><h1>Mon Budget</h1><span id="fileIndicator" class="file-indicator" style="font-size:11px;font-weight:600;color:var(--text-muted);margin-left:8px;display:inline-flex;align-items:center;gap:4px"></span></div>
     <div style="display:flex;align-items:center;gap:10px">
       <div class="year-selector">
         <button class="year-btn" onclick="changeYear(-1)"><i class="fas fa-chevron-left"></i></button>
@@ -382,9 +382,11 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
          <span style="font-size:10px;font-weight:700;color:var(--text-muted);line-height:1.1;max-width:50px">Report N-1</span>
        </div>
        <div class="header-actions">
-         <button class="btn-icon" onclick="exportData()" title="Exporter"><i class="fas fa-download"></i></button>
-         <button class="btn-icon" onclick="triggerImport()" title="Importer"><i class="fas fa-upload"></i></button>
-		<button class="btn-icon" onclick="showResetConfirm()" title="Réinitialiser"><i class="fas fa-rotate-left"></i></button>
+         <button class="btn-icon" onclick="openFile()" title="Ouvrir un fichier"><i class="fas fa-folder-open"></i></button>
+         <button class="btn-icon" onclick="saveFile()" title="Sauvegarder (Ctrl+S)"><i class="fas fa-floppy-disk"></i></button>
+         <button class="btn-icon" onclick="saveFileAs()" title="Enregistrer sous…"><i class="fas fa-file-export"></i></button>
+         <button class="btn-icon" onclick="exportDownload()" title="Exporter copie"><i class="fas fa-download"></i></button>
+         <button class="btn-icon" onclick="showResetConfirm()" title="Réinitialiser"><i class="fas fa-rotate-left"></i></button>
       </div>
     </div>
   </div>
@@ -393,7 +395,6 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
 <div class="main-content" id="mainContent"></div>
 <div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalContent"></div></div>
 <div class="toast" id="toast"><span class="toast-icon"></span><span class="toast-text"></span></div>
-<input type="file" class="file-input-hidden" id="fileInput" accept=".json" onchange="importData(event)">
 
 <script>
 var MONTHS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -404,10 +405,12 @@ var DEF_VARIABLE=[{label:'Sorties / Restaurant',forecast:0,actual:0},{label:'Sho
 
 var currentYear=new Date().getFullYear(), currentTab=0, data={};
 var recapFilter='all';
-var STORAGE_KEY='monbudget_data';
-var _store=(function(){try{var s=window.localStorage;s.setItem('__t','1');s.removeItem('__t');return s}catch(e){return null}})();
-function saveToStorage(){if(!_store)return;try{_store.setItem(STORAGE_KEY,JSON.stringify(data))}catch(e){}}
-function loadFromStorage(){if(!_store)return false;try{var s=_store.getItem(STORAGE_KEY);if(s){var p=JSON.parse(s);if(typeof p==='object'&&p!==null){data=p;return true}}}catch(e){}return false}
+var _fileHandle=null;
+var _saveTimeout=null;
+var _unsaved=false;
+function saveToStorage(){_unsaved=true;updateFileIndicator();if(_saveTimeout)clearTimeout(_saveTimeout);_saveTimeout=setTimeout(function(){_performSave()},400)}
+function _performSave(){if(!_fileHandle)return;_fileHandle.createWritable().then(function(w){return w.write(JSON.stringify(data,null,2)).then(function(){return w.close()}).then(function(){_unsaved=false;updateFileIndicator()})}).catch(function(e){console.log('Erreur sauvegarde: '+String(e))})}
+function updateFileIndicator(){var el=document.getElementById('fileIndicator');if(!el)return;if(_fileHandle){var dot=_unsaved?'<span style="color:var(--orange);font-size:10px" title="Non sauvegard\u00e9">\u25cf</span>':'<span style="color:var(--green);font-size:10px" title="Sauvegard\u00e9">\u25cf</span>';el.innerHTML='<i class="fas fa-file" style="font-size:10px;color:var(--accent)"></i><span style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(_fileHandle.name)+'</span>'+dot}else{el.innerHTML='<i class="fas fa-file-circle-question" style="font-size:10px;color:var(--text-muted)"></i><span style="font-style:italic;font-size:10px">Aucun fichier</span>'}}
 function getYearKey(){return 'y'+currentYear}
 
 function initYearData(){
@@ -847,12 +850,17 @@ function renderMonthPage(m){
   var carry=getCarryoverFromPrevMonth(m);
   var bf=ti-te-at_prevu_noProv-svDeducted-pt-vf, ba=ti-te-at_preleve_noProv-svDeducted-pt-va;
   var bfFull=bf+carry, baFull=ba+carry;
-  var totalExpensesHeader=te+va;
+  var totalExpForecast=te+vf;
+  var totalExpActual=te+va;
   var h='';
   // Summary
   h+='<div class="summary-row">';
   h+='<div class="summary-card income"><div class="label">Revenus</div><div class="value">'+fmt(ti)+'</div></div>';
-  h+='<div class="summary-card expense"><div class="label">Dépenses</div><div class="value">'+fmt(totalExpensesHeader)+'</div></div>';
+  h+='<div class="summary-card expense"><div class="label">Dépenses</div>';
+  h+='<div style="display:flex;flex-direction:column;gap:3px;margin-top:4px">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">Prévu</span><span style="font-family:\'DM Serif Display\',serif;font-size:17px;color:var(--orange)">'+fmt(totalExpForecast)+'</span></div>';
+  h+='<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">Réel</span><span style="font-family:\'DM Serif Display\',serif;font-size:17px;color:var(--red)">'+fmt(totalExpActual)+'</span></div>';
+  h+='</div></div>';
   h+='<div class="summary-card balance"><div class="label">Solde prévisionnel</div><div class="value '+(bfFull>=0?'positive':'negative')+'">'+fmt(bfFull)+'</div>';
   var ratioF=ti>0?Math.min(100,Math.max(0,(bfFull/ti)*100)):0;
   h+='<div class="balance-bar"><div class="balance-bar-fill '+(bfFull>=0?'positive':'negative')+'" style="width:'+Math.abs(ratioF)+'%"></div></div></div>';
@@ -911,7 +919,9 @@ function renderMonthPage(m){
 
   // Annual due this month
   var annuals=gAFM(m);
-  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon annual-icon"><i class="fas fa-calendar-check"></i></span>Sorties annuelles<span class="auto-badge">AUTO</span></div><div class="section-total annual-total">'+fmt(at_prevu)+'</div></div>';
+  h+='<div class="section"><div class="section-header"><div class="section-title"><span class="icon annual-icon"><i class="fas fa-calendar-check"></i></span>Sorties annuelles<span class="auto-badge">AUTO</span></div>';
+  h+='<div style="text-align:right"><div style="font-size:11px;font-weight:700;color:var(--text-muted)">Prévu: <span style="color:var(--annual-badge)">'+fmt(at_prevu)+'</span></div>';
+  h+='<div style="font-size:11px;font-weight:700;color:var(--text-muted)">Réel: <span style="color:var(--text-primary)">'+fmt(at_preleve)+'</span></div></div></div>';
   if(annuals.length===0){h+='<div class="empty-state"><i class="fas fa-calendar-xmark"></i><p>Aucune sortie annuelle ce mois.</p></div>';}
   else{for(var k=0;k<annuals.length;k++){
     var ae=annuals[k],diff=((parseFloat(ae.prevu)||0)-(parseFloat(ae.preleve)||0));
@@ -1045,7 +1055,7 @@ function buildAnnualRow(idx,row,len){
   h+='<div class="diff-value '+diffCls+'">'+fmt(diff)+'</div>';
   var nb=parseInt(row.nbYears)||1;
   h+='<div><select class="month-select" style="text-align:center;padding:7px 4px;font-size:13px" onchange="updateAnnualNbYears('+idx+',this.value)">';
-  for(var ny=1;ny<=5;ny++){h+='<option value="'+ny+'"'+(ny===nb?' selected':'')+'>'+ny+'</option>'}
+  for(var ny=1;ny<=10;ny++){h+='<option value="'+ny+'"'+(ny===nb?' selected':'')+'>'+ny+'</option>'}
   h+='</select></div>';
   h+='<div><select class="month-select" onchange="updateAnnualMonth('+idx+',this.value)">';
   for(var sm=0;sm<12;sm++){h+='<option value="'+sm+'"'+(sm===row.month?' selected':'')+'>'+MONTHS_SHORT[sm]+'</option>'}
@@ -1542,11 +1552,53 @@ function deleteAnnualExpense(idx){showConfirmDialog('Supprimer cette dépense an
 // ===== YEAR =====
 function changeYear(d){currentYear+=d;document.getElementById('yearDisplay').textContent=currentYear;initYearData();syncCarryoverToggle();renderTabs();renderContent()}
 
-// ===== EXPORT / IMPORT =====
-function exportData(){var b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='budget_'+currentYear+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);showToast('fa-check-circle','Données exportées')}
-function triggerImport(){document.getElementById('fileInput').click()}
-function importData(event){var f=event.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){try{var imp=JSON.parse(e.target.result);if(typeof imp==='object'&&imp!==null){data=imp;var k=Object.keys(data);if(k.length>0){currentYear=parseInt(k[0].substring(1),10);document.getElementById('yearDisplay').textContent=currentYear}saveToStorage();initYearData();syncCarryoverToggle();renderTabs();renderContent();showToast('fa-check-circle','Données importées')}}catch(err){showToast('fa-exclamation-triangle','Fichier invalide')}};r.readAsText(f);event.target.value=''}
+// ===== FILE SYSTEM ACCESS API =====
+function openFile(){
+  if(!('showOpenFilePicker' in window)){showToast('fa-exclamation-triangle','File System Access API non supportée par ce navigateur');return}
+  window.showOpenFilePicker({types:[{description:'Budget JSON',accept:{'application/json':['.json']}}],multiple:false}).then(function(picks){
+    _fileHandle=picks[0];return _fileHandle.getFile()
+  }).then(function(file){return file.text()}).then(function(text){
+    var imp=JSON.parse(text);
+    if(typeof imp==='object'&&imp!==null){
+      data=imp;var k=Object.keys(data);
+      if(k.length>0){var yrs=k.map(function(k2){return parseInt(k2.substring(1),10)}).sort();currentYear=yrs[yrs.length-1];document.getElementById('yearDisplay').textContent=currentYear}
+      _unsaved=false;initYearData();syncCarryoverToggle();renderTabs();renderContent();updateFileIndicator();
+      showToast('fa-folder-open','Fichier ouvert : '+_fileHandle.name)
+    }
+  }).catch(function(e){if(e.name!=='AbortError')showToast('fa-exclamation-triangle','Erreur : '+String(e.message||e))})
+}
+function saveFile(){
+  if(!_fileHandle){saveFileAs();return}
+  _fileHandle.createWritable().then(function(w){
+    return w.write(JSON.stringify(data,null,2)).then(function(){return w.close()})
+  }).then(function(){_unsaved=false;updateFileIndicator();showToast('fa-check-circle','Sauvegardé')}).catch(function(e){showToast('fa-exclamation-triangle','Erreur : '+String(e.message||e))})
+}
+function saveFileAs(){
+  if(!('showSaveFilePicker' in window)){showToast('fa-exclamation-triangle','File System Access API non supportée');return}
+  window.showSaveFilePicker({suggestedName:'budget_'+currentYear+'.json',types:[{description:'Budget JSON',accept:{'application/json':['.json']}}]}).then(function(handle){
+    _fileHandle=handle;return _fileHandle.createWritable()
+  }).then(function(w){
+    return w.write(JSON.stringify(data,null,2)).then(function(){return w.close()})
+  }).then(function(){_unsaved=false;updateFileIndicator();showToast('fa-check-circle','Fichier enregistré : '+_fileHandle.name)}).catch(function(e){if(e.name!=='AbortError')showToast('fa-exclamation-triangle','Erreur : '+String(e.message||e))})
+}
+function exportDownload(){var b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='budget_'+currentYear+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);showToast('fa-check-circle','Copie exportée')}
 function showResetConfirm(){showConfirmDialog('Réinitialiser ?','Données de '+currentYear+' effacées.',function(){delete data[getYearKey()];initYearData();saveToStorage();renderTabs();renderContent();showToast('fa-rotate-left','Données réinitialisées')})}
+function showWelcomeDialog(){
+  var o=document.getElementById('modalOverlay'),c=document.getElementById('modalContent');
+  var hasAPI='showOpenFilePicker' in window;
+  var body='<h3 style="display:flex;align-items:center;gap:10px"><span style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));display:inline-flex;align-items:center;justify-content:center;color:#FFF;font-size:16px"><i class="fas fa-wallet"></i></span> Mon Budget</h3>';
+  if(hasAPI){
+    body+='<p>Ouvrez un fichier budget existant <b>(.json)</b> ou commencez un nouveau budget vierge. Vos données seront sauvegardées automatiquement dans le fichier choisi.</p>';
+    body+='<div class="modal-actions"><button class="modal-btn cancel" id="mNew"><i class="fas fa-plus"></i> Nouveau budget</button><button class="modal-btn primary" id="mOpen"><i class="fas fa-folder-open"></i> Ouvrir un fichier</button></div>';
+  } else {
+    body+='<p style="color:var(--red)"><i class="fas fa-triangle-exclamation"></i> Votre navigateur ne supporte pas la File System Access API. Utilisez Chrome, Edge ou Opera pour la sauvegarde automatique.</p>';
+    body+='<p>Vous pouvez quand même utiliser l\'app et exporter vos données manuellement.</p>';
+    body+='<div class="modal-actions"><button class="modal-btn primary" id="mNew">Continuer</button></div>';
+  }
+  c.innerHTML=body;o.classList.add('show');
+  var btnNew=document.getElementById('mNew');if(btnNew)btnNew.onclick=function(){o.classList.remove('show')};
+  var btnOpen=document.getElementById('mOpen');if(btnOpen)btnOpen.onclick=function(){o.classList.remove('show');openFile()};
+}
 
 // ===== MODAL / TOAST =====
 function showConfirmDialog(title,msg,cb){
@@ -1594,9 +1646,11 @@ function escapeAttr(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quo
 
 // ===== INIT =====
 function syncCarryoverToggle(){var cb=document.getElementById('carryoverToggle');if(cb)cb.checked=isCarryoverEnabled()}
-var didLoad=loadFromStorage();
-if(didLoad){var sk=Object.keys(data);if(sk.length>0){var yrs=sk.map(function(k){return parseInt(k.substring(1),10)}).sort();currentYear=yrs[yrs.length-1];document.getElementById('yearDisplay').textContent=currentYear}}
-initYearData();syncCarryoverToggle();renderTabs();renderContent();
+initYearData();syncCarryoverToggle();renderTabs();renderContent();updateFileIndicator();
+// Ctrl+S pour sauvegarder
+document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveFile()}});
+// Dialog de bienvenue au chargement
+setTimeout(function(){showWelcomeDialog()},350);
 </script>
 </body>
 </html>
