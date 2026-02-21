@@ -408,8 +408,11 @@ var recapFilter='all';
 var _fileHandle=null;
 var _saveTimeout=null;
 var _unsaved=false;
-function saveToStorage(){_unsaved=true;updateFileIndicator();if(_saveTimeout)clearTimeout(_saveTimeout);_saveTimeout=setTimeout(function(){_performSave()},400)}
-function _performSave(){if(!_fileHandle)return;_fileHandle.createWritable().then(function(w){return w.write(JSON.stringify(data,null,2)).then(function(){return w.close()}).then(function(){_unsaved=false;updateFileIndicator()})}).catch(function(e){console.log('Erreur sauvegarde: '+String(e))})}
+var _saving=false;
+var _saveQueued=false;
+function saveToStorage(){_unsaved=true;updateFileIndicator();if(_saveTimeout)clearTimeout(_saveTimeout);_saveTimeout=setTimeout(function(){_performSave()},500)}
+function _performSave(){if(!_fileHandle)return;if(_saving){_saveQueued=true;return}_saving=true;_saveQueued=false;var jsonStr=JSON.stringify(data,null,2);_fileHandle.createWritable().then(function(w){return w.write(jsonStr).then(function(){return w.close()})}).then(function(){_unsaved=false;updateFileIndicator();_saving=false;if(_saveQueued){_saveQueued=false;_performSave()}}).catch(function(e){console.log('Erreur sauvegarde: '+String(e));_saving=false;if(_saveQueued){_saveQueued=false;_performSave()}})}
+function _waitForSave(){if(!_saving)return Promise.resolve();return new Promise(function(resolve){var iv=setInterval(function(){if(!_saving){clearInterval(iv);resolve()}},50)})}
 function updateFileIndicator(){var el=document.getElementById('fileIndicator');if(!el)return;if(_fileHandle){var dot=_unsaved?'<span style="color:var(--orange);font-size:10px" title="Non sauvegard\u00e9">\u25cf</span>':'<span style="color:var(--green);font-size:10px" title="Sauvegard\u00e9">\u25cf</span>';el.innerHTML='<i class="fas fa-file" style="font-size:10px;color:var(--accent)"></i><span style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(_fileHandle.name)+'</span>'+dot}else{el.innerHTML='<i class="fas fa-file-circle-question" style="font-size:10px;color:var(--text-muted)"></i><span style="font-style:italic;font-size:10px">Aucun fichier</span>'}}
 function getYearKey(){return 'y'+currentYear}
 
@@ -1555,31 +1558,42 @@ function changeYear(d){currentYear+=d;document.getElementById('yearDisplay').tex
 // ===== FILE SYSTEM ACCESS API =====
 function openFile(){
   if(!('showOpenFilePicker' in window)){showToast('fa-exclamation-triangle','File System Access API non supportée par ce navigateur');return}
-  window.showOpenFilePicker({types:[{description:'Budget JSON',accept:{'application/json':['.json']}}],multiple:false}).then(function(picks){
+  // Annuler toute sauvegarde en attente
+  if(_saveTimeout){clearTimeout(_saveTimeout);_saveTimeout=null}
+  // Attendre la fin d'une écriture en cours avant de lire
+  _waitForSave().then(function(){
+    return window.showOpenFilePicker({types:[{description:'Budget JSON',accept:{'application/json':['.json']}}],multiple:false})
+  }).then(function(picks){
     _fileHandle=picks[0];return _fileHandle.getFile()
   }).then(function(file){return file.text()}).then(function(text){
-    var imp=JSON.parse(text);
+    if(!text||!text.trim()){showToast('fa-exclamation-triangle','Le fichier est vide');return}
+    var imp;
+    try{imp=JSON.parse(text)}catch(parseErr){showToast('fa-exclamation-triangle','Fichier JSON invalide : '+parseErr.message);return}
     if(typeof imp==='object'&&imp!==null){
       data=imp;var k=Object.keys(data);
       if(k.length>0){var yrs=k.map(function(k2){return parseInt(k2.substring(1),10)}).sort();currentYear=yrs[yrs.length-1];document.getElementById('yearDisplay').textContent=currentYear}
-      _unsaved=false;initYearData();syncCarryoverToggle();renderTabs();renderContent();updateFileIndicator();
+      _unsaved=false;_saving=false;_saveQueued=false;initYearData();syncCarryoverToggle();renderTabs();renderContent();updateFileIndicator();
       showToast('fa-folder-open','Fichier ouvert : '+_fileHandle.name)
     }
   }).catch(function(e){if(e.name!=='AbortError')showToast('fa-exclamation-triangle','Erreur : '+String(e.message||e))})
 }
 function saveFile(){
   if(!_fileHandle){saveFileAs();return}
-  _fileHandle.createWritable().then(function(w){
-    return w.write(JSON.stringify(data,null,2)).then(function(){return w.close()})
-  }).then(function(){_unsaved=false;updateFileIndicator();showToast('fa-check-circle','Sauvegardé')}).catch(function(e){showToast('fa-exclamation-triangle','Erreur : '+String(e.message||e))})
+  if(_saveTimeout){clearTimeout(_saveTimeout);_saveTimeout=null}
+  _waitForSave().then(function(){
+    _saving=true;var jsonStr=JSON.stringify(data,null,2);
+    return _fileHandle.createWritable().then(function(w){return w.write(jsonStr).then(function(){return w.close()})})
+  }).then(function(){_saving=false;_unsaved=false;updateFileIndicator();showToast('fa-check-circle','Sauvegardé')}).catch(function(e){_saving=false;showToast('fa-exclamation-triangle','Erreur : '+String(e.message||e))})
 }
 function saveFileAs(){
   if(!('showSaveFilePicker' in window)){showToast('fa-exclamation-triangle','File System Access API non supportée');return}
-  window.showSaveFilePicker({suggestedName:'budget_'+currentYear+'.json',types:[{description:'Budget JSON',accept:{'application/json':['.json']}}]}).then(function(handle){
-    _fileHandle=handle;return _fileHandle.createWritable()
-  }).then(function(w){
-    return w.write(JSON.stringify(data,null,2)).then(function(){return w.close()})
-  }).then(function(){_unsaved=false;updateFileIndicator();showToast('fa-check-circle','Fichier enregistré : '+_fileHandle.name)}).catch(function(e){if(e.name!=='AbortError')showToast('fa-exclamation-triangle','Erreur : '+String(e.message||e))})
+  if(_saveTimeout){clearTimeout(_saveTimeout);_saveTimeout=null}
+  _waitForSave().then(function(){
+    return window.showSaveFilePicker({suggestedName:'budget_'+currentYear+'.json',types:[{description:'Budget JSON',accept:{'application/json':['.json']}}]})
+  }).then(function(handle){
+    _fileHandle=handle;_saving=true;var jsonStr=JSON.stringify(data,null,2);
+    return _fileHandle.createWritable().then(function(w){return w.write(jsonStr).then(function(){return w.close()})})
+  }).then(function(){_saving=false;_unsaved=false;updateFileIndicator();showToast('fa-check-circle','Fichier enregistré : '+_fileHandle.name)}).catch(function(e){_saving=false;if(e.name!=='AbortError')showToast('fa-exclamation-triangle','Erreur : '+String(e.message||e))})
 }
 function exportDownload(){var b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='budget_'+currentYear+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);showToast('fa-check-circle','Copie exportée')}
 function showResetConfirm(){showConfirmDialog('Réinitialiser ?','Données de '+currentYear+' effacées.',function(){delete data[getYearKey()];initYearData();saveToStorage();renderTabs();renderContent();showToast('fa-rotate-left','Données réinitialisées')})}
