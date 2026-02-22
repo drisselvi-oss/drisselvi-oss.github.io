@@ -6,6 +6,7 @@
 <title>Mon Budget Annuel</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root {
   --bg-primary:#F4F1EC;--bg-secondary:#FFF;--bg-card:#FFF;
@@ -365,16 +366,69 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
 .goal-item-amount{display:flex;align-items:center;gap:6px}
 .goal-item-progress{margin-top:8px}
 .goal-item-stats{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+/* Auth screen */
+.auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:var(--bg-primary)}
+.auth-card{background:var(--bg-card);border-radius:18px;box-shadow:var(--shadow-lg);border:1px solid var(--border);padding:36px 32px;width:100%;max-width:400px;animation:fadeIn .4s ease}
+.auth-card .auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:24px;justify-content:center}
+.auth-card .auth-logo-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));display:flex;align-items:center;justify-content:center;color:#FFF;font-size:22px}
+.auth-card .auth-logo h2{font-family:'DM Serif Display',serif;font-size:26px;font-weight:400;color:var(--text-primary)}
+.auth-card .auth-subtitle{text-align:center;color:var(--text-secondary);font-size:13px;margin-bottom:24px;line-height:1.5}
+.auth-field{margin-bottom:16px}
+.auth-field label{display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted);margin-bottom:6px}
+.auth-field input{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--input-bg);font-family:'Nunito',sans-serif;font-size:16px;font-weight:600;color:var(--text-primary);outline:none;transition:all .2s}
+.auth-field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light)}
+.auth-field input::placeholder{color:var(--text-muted)}
+.auth-btn{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#FFF;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:all .2s;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px}
+.auth-btn:hover{opacity:.9;transform:translateY(-1px)}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.auth-btn.secondary-auth{background:var(--bg-primary);color:var(--accent);border:2px solid var(--border);margin-top:10px}
+.auth-btn.secondary-auth:hover{border-color:var(--accent);background:var(--accent-light)}
+.auth-error{background:var(--red-bg);color:var(--red);padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:14px;display:none;align-items:center;gap:8px}
+.auth-error.show{display:flex}
+.auth-toggle{text-align:center;margin-top:18px;font-size:13px;color:var(--text-secondary)}
+.auth-toggle a{color:var(--accent);font-weight:700;cursor:pointer;text-decoration:none}
+.auth-toggle a:hover{text-decoration:underline}
+.user-badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent-light);border:1px solid var(--border);padding:4px 10px 4px 8px;border-radius:8px;font-size:11px;font-weight:700;color:var(--accent);cursor:pointer;transition:all .2s;max-width:160px}
+.user-badge:hover{border-color:var(--accent)}
+.user-badge i{font-size:12px}
+.user-badge span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+.sync-dot.saved{background:var(--green)}.sync-dot.saving{background:var(--orange)}.sync-dot.offline{background:var(--red)}
+.app-wrap{display:none}
 </style>
 </head>
 <body>
+<!-- AUTH SCREEN -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo"><div class="auth-logo-icon"><i class="fas fa-wallet"></i></div><h2>Mon Budget</h2></div>
+    <p class="auth-subtitle">Connectez-vous pour synchroniser votre budget sur tous vos appareils.</p>
+    <div class="auth-error" id="authError"><i class="fas fa-circle-exclamation"></i><span id="authErrorText"></span></div>
+    <div id="authFormLogin">
+      <div class="auth-field"><label>Email</label><input type="email" id="loginEmail" placeholder="nom@email.com" autocomplete="email"></div>
+      <div class="auth-field"><label>Mot de passe</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="auth-btn" id="loginBtn" onclick="doLogin()"><i class="fas fa-right-to-bracket"></i> Se connecter</button>
+      <div class="auth-toggle">Pas encore de compte ? <a onclick="showAuthMode('signup')">Créer un compte</a></div>
+    </div>
+    <div id="authFormSignup" style="display:none">
+      <div class="auth-field"><label>Email</label><input type="email" id="signupEmail" placeholder="nom@email.com" autocomplete="email"></div>
+      <div class="auth-field"><label>Mot de passe</label><input type="password" id="signupPass" placeholder="Min. 6 caractères" autocomplete="new-password"></div>
+      <div class="auth-field"><label>Confirmer mot de passe</label><input type="password" id="signupPass2" placeholder="••••••••" autocomplete="new-password"></div>
+      <button class="auth-btn" id="signupBtn" onclick="doSignup()"><i class="fas fa-user-plus"></i> Créer mon compte</button>
+      <div class="auth-toggle">Déjà un compte ? <a onclick="showAuthMode('login')">Se connecter</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP (hidden until authenticated) -->
+<div id="appWrap" class="app-wrap">
 <div class="app-header">
   <div class="header-top">
-    <div class="logo"><div class="logo-icon"><i class="fas fa-wallet"></i></div><h1>Mon Budget</h1><span id="fileIndicator" class="file-indicator" style="font-size:11px;font-weight:600;color:var(--text-muted);margin-left:8px;display:inline-flex;align-items:center;gap:4px"></span></div>
-    <div style="display:flex;align-items:center;gap:10px">
+    <div class="logo"><div class="logo-icon"><i class="fas fa-wallet"></i></div><h1>Mon Budget</h1></div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <div class="year-selector">
         <button class="year-btn" onclick="changeYear(-1)"><i class="fas fa-chevron-left"></i></button>
-         <span id="yearDisplay">2025</span>        
+         <span id="yearDisplay">2025</span>
          <button class="year-btn" onclick="changeYear(1)"><i class="fas fa-chevron-right"></i></button>
        </div>
        <div class="carryover-toggle-area" style="display:flex;align-items:center;gap:5px" title="Report du solde du mois précédent">
@@ -382,17 +436,20 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
          <span style="font-size:10px;font-weight:700;color:var(--text-muted);line-height:1.1;max-width:50px">Report N-1</span>
        </div>
        <div class="header-actions">
-         <button class="btn-icon" onclick="openFile()" title="Ouvrir un fichier"><i class="fas fa-folder-open"></i></button>
-         <button class="btn-icon" onclick="saveFile()" title="Sauvegarder (Ctrl+S)"><i class="fas fa-floppy-disk"></i></button>
-         <button class="btn-icon" onclick="saveFileAs()" title="Enregistrer sous…"><i class="fas fa-file-export"></i></button>
-         <button class="btn-icon" onclick="exportDownload()" title="Exporter copie"><i class="fas fa-download"></i></button>
+         <button class="btn-icon" onclick="exportDownload()" title="Exporter JSON"><i class="fas fa-download"></i></button>
          <button class="btn-icon" onclick="showResetConfirm()" title="Réinitialiser"><i class="fas fa-rotate-left"></i></button>
-      </div>
+       </div>
+       <div id="userArea" style="display:flex;align-items:center;gap:6px">
+         <span class="sync-dot saved" id="syncDot" title="Synchronisé"></span>
+         <button class="user-badge" onclick="showUserMenu()" id="userBadge"><i class="fas fa-user"></i><span id="userEmail">…</span></button>
+       </div>
     </div>
   </div>
   <div class="tabs-container" id="tabsContainer"></div>
 </div>
 <div class="main-content" id="mainContent"></div>
+</div>
+
 <div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalContent"></div></div>
 <div class="toast" id="toast"><span class="toast-icon"></span><span class="toast-text"></span></div>
 
@@ -405,15 +462,39 @@ var DEF_VARIABLE=[{label:'Sorties / Restaurant',forecast:0,actual:0},{label:'Sho
 
 var currentYear=new Date().getFullYear(), currentTab=0, data={};
 var recapFilter='all';
-var _fileHandle=null;
+
+// ===== SUPABASE =====
+var SUPABASE_URL='https://arzixrfdzdwtkmuvsexu.supabase.co';
+var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeml4cmZkemR3dGttdXZzZXh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1NzM3NjEsImV4cCI6MjA4NzE0OTc2MX0.dMoGp6pv8wr4p-2nHYfYPXyVrVBetQ3gJlCkycTKj-g';
+var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+var _currentUser=null;
 var _saveTimeout=null;
-var _unsaved=false;
 var _saving=false;
 var _saveQueued=false;
-function saveToStorage(){_unsaved=true;updateFileIndicator();if(_saveTimeout)clearTimeout(_saveTimeout);_saveTimeout=setTimeout(function(){_performSave()},500)}
-function _performSave(){if(!_fileHandle)return;if(_saving){_saveQueued=true;return}_saving=true;_saveQueued=false;var jsonStr=JSON.stringify(data,null,2);_fileHandle.createWritable().then(function(w){return w.write(jsonStr).then(function(){return w.close()})}).then(function(){_unsaved=false;updateFileIndicator();_saving=false;if(_saveQueued){_saveQueued=false;_performSave()}}).catch(function(e){console.log('Erreur sauvegarde: '+String(e));_saving=false;if(_saveQueued){_saveQueued=false;_performSave()}})}
-function _waitForSave(){if(!_saving)return Promise.resolve();return new Promise(function(resolve){var iv=setInterval(function(){if(!_saving){clearInterval(iv);resolve()}},50)})}
-function updateFileIndicator(){var el=document.getElementById('fileIndicator');if(!el)return;if(_fileHandle){var dot=_unsaved?'<span style="color:var(--orange);font-size:10px" title="Non sauvegard\u00e9">\u25cf</span>':'<span style="color:var(--green);font-size:10px" title="Sauvegard\u00e9">\u25cf</span>';el.innerHTML='<i class="fas fa-file" style="font-size:10px;color:var(--accent)"></i><span style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(_fileHandle.name)+'</span>'+dot}else{el.innerHTML='<i class="fas fa-file-circle-question" style="font-size:10px;color:var(--text-muted)"></i><span style="font-style:italic;font-size:10px">Aucun fichier</span>'}}
+var _syncState='saved'; // 'saved','saving','error'
+
+function setSyncState(s){_syncState=s;var dot=document.getElementById('syncDot');if(!dot)return;dot.className='sync-dot '+s;dot.title=s==='saved'?'Synchronisé':s==='saving'?'Sauvegarde en cours…':'Erreur de sync'}
+function saveToStorage(){setSyncState('saving');if(_saveTimeout)clearTimeout(_saveTimeout);_saveTimeout=setTimeout(function(){_performSave()},600)}
+function _performSave(){
+  if(!_currentUser){setSyncState('error');return}
+  if(_saving){_saveQueued=true;return}
+  _saving=true;_saveQueued=false;
+  sb.from('budgets').upsert({user_id:_currentUser.id,data:data,updated_at:new Date().toISOString()},{onConflict:'user_id'}).then(function(res){
+    if(res.error){console.log('Erreur sync: '+JSON.stringify(res.error));setSyncState('error')}
+    else{setSyncState('saved')}
+    _saving=false;if(_saveQueued){_saveQueued=false;_performSave()}
+  }).catch(function(e){console.log('Erreur sync: '+String(e));setSyncState('error');_saving=false;if(_saveQueued){_saveQueued=false;_performSave()}})
+}
+function loadFromSupabase(){
+  if(!_currentUser)return Promise.resolve(false);
+  return sb.from('budgets').select('data').eq('user_id',_currentUser.id).maybeSingle().then(function(res){
+    if(res.error){console.log('Erreur load: '+JSON.stringify(res.error));return false}
+    if(res.data&&res.data.data&&typeof res.data.data==='object'){
+      data=res.data.data;return true;
+    }
+    return false;
+  }).catch(function(e){console.log('Erreur load: '+String(e));return false})
+}
 function getYearKey(){return 'y'+currentYear}
 
 function initYearData(){
@@ -804,10 +885,6 @@ function getAnnualUseForAccount(accountName){
   }
   return total;
 }
-
-// Dark mode
-if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.classList.add('dark');
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(e){if(e.matches)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark')});
 
 // ===== TABS =====
 function renderTabs(){
@@ -1555,64 +1632,96 @@ function deleteAnnualExpense(idx){showConfirmDialog('Supprimer cette dépense an
 // ===== YEAR =====
 function changeYear(d){currentYear+=d;document.getElementById('yearDisplay').textContent=currentYear;initYearData();syncCarryoverToggle();renderTabs();renderContent()}
 
-// ===== FILE SYSTEM ACCESS API =====
-function openFile(){
-  if(!('showOpenFilePicker' in window)){showToast('fa-exclamation-triangle','File System Access API non supportée par ce navigateur');return}
-  // Annuler toute sauvegarde en attente
-  if(_saveTimeout){clearTimeout(_saveTimeout);_saveTimeout=null}
-  // Attendre la fin d'une écriture en cours avant de lire
-  _waitForSave().then(function(){
-    return window.showOpenFilePicker({types:[{description:'Budget JSON',accept:{'application/json':['.json']}}],multiple:false})
-  }).then(function(picks){
-    _fileHandle=picks[0];return _fileHandle.getFile()
-  }).then(function(file){return file.text()}).then(function(text){
-    if(!text||!text.trim()){showToast('fa-exclamation-triangle','Le fichier est vide');return}
-    var imp;
-    try{imp=JSON.parse(text)}catch(parseErr){showToast('fa-exclamation-triangle','Fichier JSON invalide : '+parseErr.message);return}
-    if(typeof imp==='object'&&imp!==null){
-      data=imp;var k=Object.keys(data);
-      if(k.length>0){var yrs=k.map(function(k2){return parseInt(k2.substring(1),10)}).sort();currentYear=yrs[yrs.length-1];document.getElementById('yearDisplay').textContent=currentYear}
-      _unsaved=false;_saving=false;_saveQueued=false;initYearData();syncCarryoverToggle();renderTabs();renderContent();updateFileIndicator();
-      showToast('fa-folder-open','Fichier ouvert : '+_fileHandle.name)
+// ===== SUPABASE AUTH =====
+function showAuthError(msg){var el=document.getElementById('authError'),t=document.getElementById('authErrorText');t.textContent=msg;el.classList.add('show')}
+function hideAuthError(){document.getElementById('authError').classList.remove('show')}
+function showAuthMode(mode){
+  hideAuthError();
+  document.getElementById('authFormLogin').style.display=mode==='login'?'block':'none';
+  document.getElementById('authFormSignup').style.display=mode==='signup'?'block':'none';
+}
+function doLogin(){
+  hideAuthError();
+  var email=(document.getElementById('loginEmail').value||'').trim();
+  var pass=document.getElementById('loginPass').value||'';
+  if(!email||!pass){showAuthError('Veuillez remplir tous les champs.');return}
+  var btn=document.getElementById('loginBtn');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Connexion…';
+  sb.auth.signInWithPassword({email:email,password:pass}).then(function(res){
+    btn.disabled=false;btn.innerHTML='<i class="fas fa-right-to-bracket"></i> Se connecter';
+    if(res.error){showAuthError(translateAuthError(res.error.message));return}
+    onAuthSuccess(res.data.user);
+  }).catch(function(e){btn.disabled=false;btn.innerHTML='<i class="fas fa-right-to-bracket"></i> Se connecter';showAuthError(String(e))})
+}
+function doSignup(){
+  hideAuthError();
+  var email=(document.getElementById('signupEmail').value||'').trim();
+  var pass=document.getElementById('signupPass').value||'';
+  var pass2=document.getElementById('signupPass2').value||'';
+  if(!email||!pass){showAuthError('Veuillez remplir tous les champs.');return}
+  if(pass!==pass2){showAuthError('Les mots de passe ne correspondent pas.');return}
+  if(pass.length<6){showAuthError('Le mot de passe doit faire au moins 6 caractères.');return}
+  var btn=document.getElementById('signupBtn');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Création…';
+  sb.auth.signUp({email:email,password:pass}).then(function(res){
+    btn.disabled=false;btn.innerHTML='<i class="fas fa-user-plus"></i> Créer mon compte';
+    if(res.error){showAuthError(translateAuthError(res.error.message));return}
+    if(res.data.user&&!res.data.session){
+      showAuthError('');hideAuthError();
+      document.querySelector('.auth-subtitle').innerHTML='<span style="color:var(--green)"><i class="fas fa-check-circle"></i> Compte créé ! Vérifiez votre email pour confirmer, puis connectez-vous.</span>';
+      showAuthMode('login');return;
     }
-  }).catch(function(e){if(e.name!=='AbortError')showToast('fa-exclamation-triangle','Erreur : '+String(e.message||e))})
+    onAuthSuccess(res.data.user);
+  }).catch(function(e){btn.disabled=false;btn.innerHTML='<i class="fas fa-user-plus"></i> Créer mon compte';showAuthError(String(e))})
 }
-function saveFile(){
-  if(!_fileHandle){saveFileAs();return}
-  if(_saveTimeout){clearTimeout(_saveTimeout);_saveTimeout=null}
-  _waitForSave().then(function(){
-    _saving=true;var jsonStr=JSON.stringify(data,null,2);
-    return _fileHandle.createWritable().then(function(w){return w.write(jsonStr).then(function(){return w.close()})})
-  }).then(function(){_saving=false;_unsaved=false;updateFileIndicator();showToast('fa-check-circle','Sauvegardé')}).catch(function(e){_saving=false;showToast('fa-exclamation-triangle','Erreur : '+String(e.message||e))})
+function translateAuthError(msg){
+  if(msg.indexOf('Invalid login')!==-1)return 'Email ou mot de passe incorrect.';
+  if(msg.indexOf('already registered')!==-1)return 'Cet email est déjà utilisé.';
+  if(msg.indexOf('valid email')!==-1)return 'Adresse email invalide.';
+  if(msg.indexOf('least 6')!==-1||msg.indexOf('too short')!==-1)return 'Le mot de passe doit faire au moins 6 caractères.';
+  if(msg.indexOf('rate limit')!==-1)return 'Trop de tentatives. Réessayez dans quelques minutes.';
+  return msg;
 }
-function saveFileAs(){
-  if(!('showSaveFilePicker' in window)){showToast('fa-exclamation-triangle','File System Access API non supportée');return}
-  if(_saveTimeout){clearTimeout(_saveTimeout);_saveTimeout=null}
-  _waitForSave().then(function(){
-    return window.showSaveFilePicker({suggestedName:'budget_'+currentYear+'.json',types:[{description:'Budget JSON',accept:{'application/json':['.json']}}]})
-  }).then(function(handle){
-    _fileHandle=handle;_saving=true;var jsonStr=JSON.stringify(data,null,2);
-    return _fileHandle.createWritable().then(function(w){return w.write(jsonStr).then(function(){return w.close()})})
-  }).then(function(){_saving=false;_unsaved=false;updateFileIndicator();showToast('fa-check-circle','Fichier enregistré : '+_fileHandle.name)}).catch(function(e){_saving=false;if(e.name!=='AbortError')showToast('fa-exclamation-triangle','Erreur : '+String(e.message||e))})
+function onAuthSuccess(user){
+  _currentUser=user;
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('appWrap').style.display='block';
+  var emailEl=document.getElementById('userEmail');if(emailEl)emailEl.textContent=user.email||'Utilisateur';
+  // Charger les données depuis Supabase
+  setSyncState('saving');
+  loadFromSupabase().then(function(loaded){
+    if(loaded){
+      var k=Object.keys(data);
+      if(k.length>0){var yrs=k.map(function(k2){return parseInt(k2.substring(1),10)}).sort();currentYear=yrs[yrs.length-1];document.getElementById('yearDisplay').textContent=currentYear}
+    }
+    initYearData();syncCarryoverToggle();renderTabs();renderContent();setSyncState('saved');
+    showToast('fa-cloud-arrow-down',loaded?'Données chargées depuis le cloud':'Nouveau budget créé');
+  })
+}
+function doLogout(){
+  sb.auth.signOut().then(function(){
+    _currentUser=null;data={};currentTab=0;currentYear=new Date().getFullYear();
+    document.getElementById('appWrap').style.display='none';
+    document.getElementById('authScreen').style.display='flex';
+    document.querySelector('.auth-subtitle').textContent='Connectez-vous pour synchroniser votre budget sur tous vos appareils.';
+    showAuthMode('login');
+  })
+}
+function showUserMenu(){
+  var o=document.getElementById('modalOverlay'),c=document.getElementById('modalContent');
+  var email=_currentUser?_currentUser.email:'';
+  c.innerHTML='<h3><i class="fas fa-user-circle" style="color:var(--accent);margin-right:8px"></i>Mon compte</h3>'
+    +'<p style="margin-bottom:6px"><b>Email :</b> '+escapeHtml(email)+'</p>'
+    +'<p style="font-size:12px;color:var(--text-muted)">Vos données sont sauvegardées automatiquement dans le cloud Supabase.</p>'
+    +'<div class="modal-actions" style="margin-top:20px">'
+    +'<button class="modal-btn cancel" id="mC">Fermer</button>'
+    +'<button class="modal-btn confirm" id="mLogout" style="background:var(--red)"><i class="fas fa-right-from-bracket"></i> Se déconnecter</button>'
+    +'</div>';
+  o.classList.add('show');
+  document.getElementById('mC').onclick=function(){o.classList.remove('show')};
+  document.getElementById('mLogout').onclick=function(){o.classList.remove('show');doLogout()};
+  o.onclick=function(e){if(e.target===o)o.classList.remove('show')};
 }
 function exportDownload(){var b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='budget_'+currentYear+'.json';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);showToast('fa-check-circle','Copie exportée')}
 function showResetConfirm(){showConfirmDialog('Réinitialiser ?','Données de '+currentYear+' effacées.',function(){delete data[getYearKey()];initYearData();saveToStorage();renderTabs();renderContent();showToast('fa-rotate-left','Données réinitialisées')})}
-function showWelcomeDialog(){
-  var o=document.getElementById('modalOverlay'),c=document.getElementById('modalContent');
-  var hasAPI='showOpenFilePicker' in window;
-  var body='<h3 style="display:flex;align-items:center;gap:10px"><span style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));display:inline-flex;align-items:center;justify-content:center;color:#FFF;font-size:16px"><i class="fas fa-wallet"></i></span> Mon Budget</h3>';
-  if(hasAPI){
-    body+='<p>Ouvrez un fichier budget existant <b>(.json)</b> ou commencez un nouveau budget vierge. Vos données seront sauvegardées automatiquement dans le fichier choisi.</p>';
-    body+='<div class="modal-actions"><button class="modal-btn cancel" id="mNew"><i class="fas fa-plus"></i> Nouveau budget</button><button class="modal-btn primary" id="mOpen"><i class="fas fa-folder-open"></i> Ouvrir un fichier</button></div>';
-  } else {
-    body+='<p style="color:var(--red)"><i class="fas fa-triangle-exclamation"></i> Votre navigateur ne supporte pas la File System Access API. Utilisez Chrome, Edge ou Opera pour la sauvegarde automatique.</p>';
-    body+='<p>Vous pouvez quand même utiliser l\'app et exporter vos données manuellement.</p>';
-    body+='<div class="modal-actions"><button class="modal-btn primary" id="mNew">Continuer</button></div>';
-  }
-  c.innerHTML=body;o.classList.add('show');
-  var btnNew=document.getElementById('mNew');if(btnNew)btnNew.onclick=function(){o.classList.remove('show')};
-  var btnOpen=document.getElementById('mOpen');if(btnOpen)btnOpen.onclick=function(){o.classList.remove('show');openFile()};
-}
 
 // ===== MODAL / TOAST =====
 function showConfirmDialog(title,msg,cb){
@@ -1660,11 +1769,28 @@ function escapeAttr(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quo
 
 // ===== INIT =====
 function syncCarryoverToggle(){var cb=document.getElementById('carryoverToggle');if(cb)cb.checked=isCarryoverEnabled()}
-initYearData();syncCarryoverToggle();renderTabs();renderContent();updateFileIndicator();
-// Ctrl+S pour sauvegarder
-document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveFile()}});
-// Dialog de bienvenue au chargement
-setTimeout(function(){showWelcomeDialog()},350);
+
+// Dark mode
+if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.classList.add('dark');
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(e){if(e.matches)document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark')});
+
+// Enter key on auth fields
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'){
+    var t=e.target;
+    if(t.id==='loginEmail'||t.id==='loginPass')doLogin();
+    if(t.id==='signupEmail'||t.id==='signupPass'||t.id==='signupPass2')doSignup();
+  }
+});
+
+// Try to restore session
+(function(){
+  sb.auth.getSession().then(function(res){
+    if(res.data&&res.data.session&&res.data.session.user){
+      onAuthSuccess(res.data.session.user);
+    }
+  }).catch(function(){/* no session */});
+})();
 </script>
 </body>
 </html>
