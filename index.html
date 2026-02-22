@@ -466,34 +466,42 @@ var recapFilter='all';
 // ===== SUPABASE =====
 var SUPABASE_URL='https://arzixrfdzdwtkmuvsexu.supabase.co';
 var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeml4cmZkemR3dGttdXZzZXh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1NzM3NjEsImV4cCI6MjA4NzE0OTc2MX0.dMoGp6pv8wr4p-2nHYfYPXyVrVBetQ3gJlCkycTKj-g';
-var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+  auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+});
 var _currentUser=null;
 var _saveTimeout=null;
 var _saving=false;
 var _saveQueued=false;
-var _syncState='saved'; // 'saved','saving','error'
+var _syncState='saved';
+var _dataLoaded=false; // Guard: only allow saves after a successful load or confirmed new budget
 
 function setSyncState(s){_syncState=s;var dot=document.getElementById('syncDot');if(!dot)return;dot.className='sync-dot '+s;dot.title=s==='saved'?'Synchronisé':s==='saving'?'Sauvegarde en cours…':'Erreur de sync'}
-function saveToStorage(){setSyncState('saving');if(_saveTimeout)clearTimeout(_saveTimeout);_saveTimeout=setTimeout(function(){_performSave()},600)}
+function saveToStorage(){if(!_dataLoaded)return;setSyncState('saving');if(_saveTimeout)clearTimeout(_saveTimeout);_saveTimeout=setTimeout(function(){_performSave()},600)}
 function _performSave(){
-  if(!_currentUser){setSyncState('error');return}
+  if(!_currentUser||!_dataLoaded){setSyncState('error');return}
   if(_saving){_saveQueued=true;return}
   _saving=true;_saveQueued=false;
   sb.from('budgets').upsert({user_id:_currentUser.id,data:data,updated_at:new Date().toISOString()},{onConflict:'user_id'}).then(function(res){
-    if(res.error){console.log('Erreur sync: '+JSON.stringify(res.error));setSyncState('error')}
+    if(res.error){console.log('Erreur sync: '+JSON.stringify(res.error));setSyncState('error');showToast('fa-triangle-exclamation','Erreur sync: '+(res.error.message||''))}
     else{setSyncState('saved')}
     _saving=false;if(_saveQueued){_saveQueued=false;_performSave()}
-  }).catch(function(e){console.log('Erreur sync: '+String(e));setSyncState('error');_saving=false;if(_saveQueued){_saveQueued=false;_performSave()}})
+  }).catch(function(e){console.log('Erreur sync catch: '+String(e));setSyncState('error');_saving=false;if(_saveQueued){_saveQueued=false;_performSave()}})
 }
 function loadFromSupabase(){
   if(!_currentUser)return Promise.resolve(false);
-  return sb.from('budgets').select('data').eq('user_id',_currentUser.id).maybeSingle().then(function(res){
-    if(res.error){console.log('Erreur load: '+JSON.stringify(res.error));return false}
+  return sb.from('budgets').select('data,updated_at').eq('user_id',_currentUser.id).maybeSingle().then(function(res){
+    if(res.error){
+      console.log('Erreur load: '+JSON.stringify(res.error));
+      showToast('fa-triangle-exclamation','Erreur chargement: '+(res.error.message||''));
+      return false;
+    }
     if(res.data&&res.data.data&&typeof res.data.data==='object'){
-      data=res.data.data;return true;
+      var keys=Object.keys(res.data.data);
+      if(keys.length>0){data=res.data.data;return true}
     }
     return false;
-  }).catch(function(e){console.log('Erreur load: '+String(e));return false})
+  }).catch(function(e){console.log('Erreur load catch: '+String(e));showToast('fa-triangle-exclamation','Erreur réseau');return false})
 }
 function getYearKey(){return 'y'+currentYear}
 
@@ -1682,6 +1690,7 @@ function translateAuthError(msg){
 }
 function onAuthSuccess(user){
   _currentUser=user;
+  _dataLoaded=false; // Block saves until load completes
   document.getElementById('authScreen').style.display='none';
   document.getElementById('appWrap').style.display='block';
   var emailEl=document.getElementById('userEmail');if(emailEl)emailEl.textContent=user.email||'Utilisateur';
@@ -1692,11 +1701,20 @@ function onAuthSuccess(user){
       var k=Object.keys(data);
       if(k.length>0){var yrs=k.map(function(k2){return parseInt(k2.substring(1),10)}).sort();currentYear=yrs[yrs.length-1];document.getElementById('yearDisplay').textContent=currentYear}
     }
-    initYearData();syncCarryoverToggle();renderTabs();renderContent();setSyncState('saved');
-    showToast('fa-cloud-arrow-down',loaded?'Données chargées depuis le cloud':'Nouveau budget créé');
+    initYearData();syncCarryoverToggle();renderTabs();renderContent();
+    _dataLoaded=true; // NOW allow saves
+    setSyncState('saved');
+    if(loaded){showToast('fa-cloud-arrow-down','Données chargées depuis le cloud')}
+    else{
+      // First time user — save initial empty structure
+      saveToStorage();
+      showToast('fa-plus-circle','Nouveau budget créé');
+    }
   })
 }
 function doLogout(){
+  if(_saveTimeout){clearTimeout(_saveTimeout);_saveTimeout=null}
+  _dataLoaded=false;_saving=false;_saveQueued=false;
   sb.auth.signOut().then(function(){
     _currentUser=null;data={};currentTab=0;currentYear=new Date().getFullYear();
     document.getElementById('appWrap').style.display='none';
@@ -1783,14 +1801,8 @@ document.addEventListener('keydown',function(e){
   }
 });
 
-// Try to restore session
-(function(){
-  sb.auth.getSession().then(function(res){
-    if(res.data&&res.data.session&&res.data.session.user){
-      onAuthSuccess(res.data.session.user);
-    }
-  }).catch(function(){/* no session */});
-})();
+// No session persistence in iframe (localStorage unavailable)
+// User must log in each time — auth screen is shown by default
 </script>
 </body>
 </html>
