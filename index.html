@@ -468,35 +468,55 @@ var recapFilter='all';
 var SUPABASE_URL='https://arzixrfdzdwtkmuvsexu.supabase.co';
 var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyeml4cmZkemR3dGttdXZzZXh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1NzM3NjEsImV4cCI6MjA4NzE0OTc2MX0.dMoGp6pv8wr4p-2nHYfYPXyVrVBetQ3gJlCkycTKj-g';
 var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
-  auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+  auth:{persistSession:false,autoRefreshToken:true,detectSessionInUrl:false}
 });
 var _currentUser=null;
+var _accessToken=null;
 var _saveTimeout=null;
 var _saving=false;
 var _saveQueued=false;
 var _syncState='saved';
-var _dataLoaded=false; // Guard: only allow saves after a successful load or confirmed new budget
+var _dataLoaded=false;
+
+// Track token refresh from Supabase client
+sb.auth.onAuthStateChange(function(event,session){
+  if(session&&session.access_token){_accessToken=session.access_token}
+});
 
 function setSyncState(s){_syncState=s;var dot=document.getElementById('syncDot');if(!dot)return;dot.className='sync-dot '+s;dot.title=s==='saved'?'Synchronisé':s==='saving'?'Sauvegarde en cours…':'Erreur — cliquez pour réessayer'}
 function saveToStorage(){if(!_dataLoaded)return;setSyncState('saving');if(_saveTimeout)clearTimeout(_saveTimeout);_saveTimeout=setTimeout(function(){_performSave()},600)}
+
+// Raw fetch save — bypasses Supabase JS client (more reliable in Safari/iframe)
 function _performSave(){
-  if(!_currentUser||!_dataLoaded){setSyncState('error');return}
+  if(!_currentUser||!_dataLoaded||!_accessToken){setSyncState('error');return}
   if(_saving){_saveQueued=true;return}
   _saving=true;_saveQueued=false;
-  // Safety timeout: si la promesse ne se résout jamais (Safari/iframe), on débloque après 12s
   var _safetyTimer=setTimeout(function(){
-    if(_saving){console.log('Save timeout — force reset');_saving=false;setSyncState('error');showToast('fa-clock','Timeout sync — réessayez');if(_saveQueued){_saveQueued=false;_performSave()}}
+    if(_saving){_saving=false;setSyncState('error');showToast('fa-clock','Timeout sync — réessayez');if(_saveQueued){_saveQueued=false;_performSave()}}
   },12000);
-  try{
-    sb.from('budgets').upsert({user_id:_currentUser.id,data:data,updated_at:new Date().toISOString()},{onConflict:'user_id'}).then(function(res){
-      clearTimeout(_safetyTimer);
-      if(res.error){console.log('Erreur sync: '+JSON.stringify(res.error));setSyncState('error');showToast('fa-triangle-exclamation','Erreur sync: '+(res.error.message||''))}
-      else{setSyncState('saved')}
-      _saving=false;if(_saveQueued){_saveQueued=false;_performSave()}
-    }).catch(function(e){clearTimeout(_safetyTimer);console.log('Erreur sync catch: '+String(e));setSyncState('error');_saving=false;if(_saveQueued){_saveQueued=false;_performSave()}})
-  }catch(ex){clearTimeout(_safetyTimer);console.log('Erreur sync exception: '+String(ex));setSyncState('error');_saving=false}
+  var url=SUPABASE_URL+'/rest/v1/budgets?on_conflict=user_id';
+  fetch(url,{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'apikey':SUPABASE_KEY,
+      'Authorization':'Bearer '+_accessToken,
+      'Prefer':'resolution=merge-duplicates'
+    },
+    body:JSON.stringify({user_id:_currentUser.id,data:data,updated_at:new Date().toISOString()})
+  }).then(function(r){
+    clearTimeout(_safetyTimer);
+    if(r.ok||r.status===201||r.status===204){setSyncState('saved')}
+    else if(r.status===401||r.status===403){setSyncState('error');showToast('fa-lock','Session expirée — reconnectez-vous')}
+    else{r.text().then(function(t){console.log('Save err: '+r.status+' '+t)}).catch(function(){});setSyncState('error');showToast('fa-triangle-exclamation','Erreur sync ('+r.status+')')}
+    _saving=false;if(_saveQueued){_saveQueued=false;_performSave()}
+  }).catch(function(e){
+    clearTimeout(_safetyTimer);console.log('Save fetch err: '+String(e));
+    setSyncState('error');showToast('fa-wifi','Erreur réseau — réessayez');
+    _saving=false;if(_saveQueued){_saveQueued=false;_performSave()}
+  });
 }
-// Clic sur la pastille de sync pour forcer une re-sync
+
 function retrySave(){
   if(_syncState==='error'||_syncState==='saving'){
     if(_saveTimeout){clearTimeout(_saveTimeout);_saveTimeout=null}
@@ -505,31 +525,45 @@ function retrySave(){
     saveToStorage();
   }
 }
+
+// Raw fetch load — bypasses Supabase JS client
 function loadFromSupabase(){
-  if(!_currentUser)return Promise.resolve(false);
+  if(!_currentUser||!_accessToken)return Promise.resolve(false);
   return new Promise(function(resolve){
-    // Safety timeout pour Safari/iframe: si la requête ne répond jamais, on débloque après 15s
     var _loadTimer=setTimeout(function(){
-      console.log('Load timeout — force resolve false');
       showToast('fa-clock','Timeout chargement — données locales vierges');
       resolve(false);
     },15000);
-    try{
-      sb.from('budgets').select('data,updated_at').eq('user_id',_currentUser.id).maybeSingle().then(function(res){
-        clearTimeout(_loadTimer);
-        if(res.error){
-          console.log('Erreur load: '+JSON.stringify(res.error));
-          showToast('fa-triangle-exclamation','Erreur chargement: '+(res.error.message||''));
-          resolve(false);return;
-        }
-        if(res.data&&res.data.data&&typeof res.data.data==='object'){
-          var keys=Object.keys(res.data.data);
-          if(keys.length>0){data=res.data.data;resolve(true);return}
-        }
-        resolve(false);
-      }).catch(function(e){clearTimeout(_loadTimer);console.log('Erreur load catch: '+String(e));showToast('fa-triangle-exclamation','Erreur réseau');resolve(false)})
-    }catch(ex){clearTimeout(_loadTimer);console.log('Erreur load exception: '+String(ex));resolve(false)}
-  })
+    var url=SUPABASE_URL+'/rest/v1/budgets?user_id=eq.'+_currentUser.id+'&select=data,updated_at';
+    fetch(url,{
+      method:'GET',
+      headers:{
+        'apikey':SUPABASE_KEY,
+        'Authorization':'Bearer '+_accessToken,
+        'Accept':'application/json'
+      }
+    }).then(function(r){
+      clearTimeout(_loadTimer);
+      if(!r.ok){
+        console.log('Load err: '+r.status);
+        if(r.status===401||r.status===403){showToast('fa-lock','Session expirée')}
+        else{showToast('fa-triangle-exclamation','Erreur chargement ('+r.status+')')}
+        resolve(false);return;
+      }
+      return r.json();
+    }).then(function(rows){
+      if(!rows){resolve(false);return}
+      if(Array.isArray(rows)&&rows.length>0&&rows[0].data&&typeof rows[0].data==='object'){
+        var keys=Object.keys(rows[0].data);
+        if(keys.length>0){data=rows[0].data;resolve(true);return}
+      }
+      resolve(false);
+    }).catch(function(e){
+      clearTimeout(_loadTimer);console.log('Load fetch err: '+String(e));
+      showToast('fa-wifi','Erreur réseau chargement');
+      resolve(false);
+    });
+  });
 }
 function getYearKey(){return 'y'+currentYear}
 
@@ -1685,6 +1719,7 @@ function doLogin(){
   sb.auth.signInWithPassword({email:email,password:pass}).then(function(res){
     btn.disabled=false;btn.innerHTML='<i class="fas fa-right-to-bracket"></i> Se connecter';
     if(res.error){showAuthError(translateAuthError(res.error.message));return}
+    _accessToken=res.data.session?res.data.session.access_token:null;
     onAuthSuccess(res.data.user);
   }).catch(function(e){btn.disabled=false;btn.innerHTML='<i class="fas fa-right-to-bracket"></i> Se connecter';showAuthError(String(e))})
 }
@@ -1705,6 +1740,7 @@ function doSignup(){
       document.querySelector('.auth-subtitle').innerHTML='<span style="color:var(--green)"><i class="fas fa-check-circle"></i> Compte créé ! Vérifiez votre email pour confirmer, puis connectez-vous.</span>';
       showAuthMode('login');return;
     }
+    _accessToken=res.data.session?res.data.session.access_token:null;
     onAuthSuccess(res.data.user);
   }).catch(function(e){btn.disabled=false;btn.innerHTML='<i class="fas fa-user-plus"></i> Créer mon compte';showAuthError(String(e))})
 }
@@ -1742,7 +1778,7 @@ function onAuthSuccess(user){
 }
 function doLogout(){
   if(_saveTimeout){clearTimeout(_saveTimeout);_saveTimeout=null}
-  _dataLoaded=false;_saving=false;_saveQueued=false;
+  _dataLoaded=false;_saving=false;_saveQueued=false;_accessToken=null;
   sb.auth.signOut().then(function(){
     _currentUser=null;data={};currentTab=0;currentYear=new Date().getFullYear();
     document.getElementById('appWrap').style.display='none';
