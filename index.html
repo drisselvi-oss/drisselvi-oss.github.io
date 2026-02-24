@@ -392,8 +392,9 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
 .user-badge:hover{border-color:var(--accent)}
 .user-badge i{font-size:12px}
 .user-badge span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
-.sync-dot.saved{background:var(--green)}.sync-dot.saving{background:var(--orange)}.sync-dot.offline{background:var(--red)}
+.sync-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;transition:background .3s}
+.sync-dot.saved{background:var(--green)}.sync-dot.saving{background:var(--orange);animation:syncPulse 1s ease infinite}.sync-dot.error{background:var(--red);animation:syncPulse 1.5s ease infinite}
+@keyframes syncPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.3)}}
 .app-wrap{display:none}
 </style>
 </head>
@@ -440,7 +441,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg-primary);color:var(--te
          <button class="btn-icon" onclick="showResetConfirm()" title="Réinitialiser"><i class="fas fa-rotate-left"></i></button>
        </div>
        <div id="userArea" style="display:flex;align-items:center;gap:6px">
-         <span class="sync-dot saved" id="syncDot" title="Synchronisé"></span>
+         <span class="sync-dot saved" id="syncDot" title="Synchronisé" onclick="retrySave()" style="cursor:pointer"></span>
          <button class="user-badge" onclick="showUserMenu()" id="userBadge"><i class="fas fa-user"></i><span id="userEmail">…</span></button>
        </div>
     </div>
@@ -476,32 +477,59 @@ var _saveQueued=false;
 var _syncState='saved';
 var _dataLoaded=false; // Guard: only allow saves after a successful load or confirmed new budget
 
-function setSyncState(s){_syncState=s;var dot=document.getElementById('syncDot');if(!dot)return;dot.className='sync-dot '+s;dot.title=s==='saved'?'Synchronisé':s==='saving'?'Sauvegarde en cours…':'Erreur de sync'}
+function setSyncState(s){_syncState=s;var dot=document.getElementById('syncDot');if(!dot)return;dot.className='sync-dot '+s;dot.title=s==='saved'?'Synchronisé':s==='saving'?'Sauvegarde en cours…':'Erreur — cliquez pour réessayer'}
 function saveToStorage(){if(!_dataLoaded)return;setSyncState('saving');if(_saveTimeout)clearTimeout(_saveTimeout);_saveTimeout=setTimeout(function(){_performSave()},600)}
 function _performSave(){
   if(!_currentUser||!_dataLoaded){setSyncState('error');return}
   if(_saving){_saveQueued=true;return}
   _saving=true;_saveQueued=false;
-  sb.from('budgets').upsert({user_id:_currentUser.id,data:data,updated_at:new Date().toISOString()},{onConflict:'user_id'}).then(function(res){
-    if(res.error){console.log('Erreur sync: '+JSON.stringify(res.error));setSyncState('error');showToast('fa-triangle-exclamation','Erreur sync: '+(res.error.message||''))}
-    else{setSyncState('saved')}
-    _saving=false;if(_saveQueued){_saveQueued=false;_performSave()}
-  }).catch(function(e){console.log('Erreur sync catch: '+String(e));setSyncState('error');_saving=false;if(_saveQueued){_saveQueued=false;_performSave()}})
+  // Safety timeout: si la promesse ne se résout jamais (Safari/iframe), on débloque après 12s
+  var _safetyTimer=setTimeout(function(){
+    if(_saving){console.log('Save timeout — force reset');_saving=false;setSyncState('error');showToast('fa-clock','Timeout sync — réessayez');if(_saveQueued){_saveQueued=false;_performSave()}}
+  },12000);
+  try{
+    sb.from('budgets').upsert({user_id:_currentUser.id,data:data,updated_at:new Date().toISOString()},{onConflict:'user_id'}).then(function(res){
+      clearTimeout(_safetyTimer);
+      if(res.error){console.log('Erreur sync: '+JSON.stringify(res.error));setSyncState('error');showToast('fa-triangle-exclamation','Erreur sync: '+(res.error.message||''))}
+      else{setSyncState('saved')}
+      _saving=false;if(_saveQueued){_saveQueued=false;_performSave()}
+    }).catch(function(e){clearTimeout(_safetyTimer);console.log('Erreur sync catch: '+String(e));setSyncState('error');_saving=false;if(_saveQueued){_saveQueued=false;_performSave()}})
+  }catch(ex){clearTimeout(_safetyTimer);console.log('Erreur sync exception: '+String(ex));setSyncState('error');_saving=false}
+}
+// Clic sur la pastille de sync pour forcer une re-sync
+function retrySave(){
+  if(_syncState==='error'||_syncState==='saving'){
+    if(_saveTimeout){clearTimeout(_saveTimeout);_saveTimeout=null}
+    _saving=false;_saveQueued=false;
+    showToast('fa-rotate','Re-synchronisation…');
+    saveToStorage();
+  }
 }
 function loadFromSupabase(){
   if(!_currentUser)return Promise.resolve(false);
-  return sb.from('budgets').select('data,updated_at').eq('user_id',_currentUser.id).maybeSingle().then(function(res){
-    if(res.error){
-      console.log('Erreur load: '+JSON.stringify(res.error));
-      showToast('fa-triangle-exclamation','Erreur chargement: '+(res.error.message||''));
-      return false;
-    }
-    if(res.data&&res.data.data&&typeof res.data.data==='object'){
-      var keys=Object.keys(res.data.data);
-      if(keys.length>0){data=res.data.data;return true}
-    }
-    return false;
-  }).catch(function(e){console.log('Erreur load catch: '+String(e));showToast('fa-triangle-exclamation','Erreur réseau');return false})
+  return new Promise(function(resolve){
+    // Safety timeout pour Safari/iframe: si la requête ne répond jamais, on débloque après 15s
+    var _loadTimer=setTimeout(function(){
+      console.log('Load timeout — force resolve false');
+      showToast('fa-clock','Timeout chargement — données locales vierges');
+      resolve(false);
+    },15000);
+    try{
+      sb.from('budgets').select('data,updated_at').eq('user_id',_currentUser.id).maybeSingle().then(function(res){
+        clearTimeout(_loadTimer);
+        if(res.error){
+          console.log('Erreur load: '+JSON.stringify(res.error));
+          showToast('fa-triangle-exclamation','Erreur chargement: '+(res.error.message||''));
+          resolve(false);return;
+        }
+        if(res.data&&res.data.data&&typeof res.data.data==='object'){
+          var keys=Object.keys(res.data.data);
+          if(keys.length>0){data=res.data.data;resolve(true);return}
+        }
+        resolve(false);
+      }).catch(function(e){clearTimeout(_loadTimer);console.log('Erreur load catch: '+String(e));showToast('fa-triangle-exclamation','Erreur réseau');resolve(false)})
+    }catch(ex){clearTimeout(_loadTimer);console.log('Erreur load exception: '+String(ex));resolve(false)}
+  })
 }
 function getYearKey(){return 'y'+currentYear}
 
